@@ -10,6 +10,90 @@
   --accent: #f97316;
   --accent-ink: #1b1008;
   --stroke: #31405f;
+  --glow-a: #1e3a8a66;
+  --glow-b: #f973164d;
+  --bg-mid: #0f1522;
+  --bg-end: #0b101a;
+}
+
+[data-theme="dark"] {
+  --bg: #0c0f16;
+  --panel: #161d2b;
+  --panel-soft: #20293d;
+  --panel-strong: #121826;
+  --text: #eef3ff;
+  --muted: #a8b4ce;
+  --accent: #f97316;
+  --accent-ink: #1b1008;
+  --stroke: #31405f;
+  --glow-a: #1e3a8a66;
+  --glow-b: #f973164d;
+  --bg-mid: #0f1522;
+  --bg-end: #0b101a;
+}
+
+[data-theme="light"] {
+  --bg: #f4f7ff;
+  --panel: #ffffff;
+  --panel-soft: #e8eefc;
+  --panel-strong: #dde6fb;
+  --text: #111827;
+  --muted: #54627d;
+  --accent: #2563eb;
+  --accent-ink: #f8fbff;
+  --stroke: #bfd0f3;
+  --glow-a: #93c5fd66;
+  --glow-b: #60a5fa44;
+  --bg-mid: #e6efff;
+  --bg-end: #f6f9ff;
+}
+
+[data-theme="nord"] {
+  --bg: #2e3440;
+  --panel: #3b4252;
+  --panel-soft: #434c5e;
+  --panel-strong: #2f3643;
+  --text: #eceff4;
+  --muted: #d8dee9;
+  --accent: #88c0d0;
+  --accent-ink: #20333b;
+  --stroke: #4c566a;
+  --glow-a: #81a1c177;
+  --glow-b: #88c0d055;
+  --bg-mid: #3b4252;
+  --bg-end: #2c3340;
+}
+
+[data-theme="matrix"] {
+  --bg: #030805;
+  --panel: #07150d;
+  --panel-soft: #0f2217;
+  --panel-strong: #060f0a;
+  --text: #d6ffe6;
+  --muted: #8bbca0;
+  --accent: #22c55e;
+  --accent-ink: #041209;
+  --stroke: #1f5e37;
+  --glow-a: #22c55e5a;
+  --glow-b: #16a34a52;
+  --bg-mid: #08150f;
+  --bg-end: #040a07;
+}
+
+[data-theme="sunset"] {
+  --bg: #1a0e10;
+  --panel: #2a1519;
+  --panel-soft: #3a1d23;
+  --panel-strong: #220f13;
+  --text: #ffe9e2;
+  --muted: #f4b9a9;
+  --accent: #fb7185;
+  --accent-ink: #2d0b12;
+  --stroke: #7a3140;
+  --glow-a: #fb718577;
+  --glow-b: #f9731666;
+  --bg-mid: #2d1218;
+  --bg-end: #1d0b10;
 }
 
 @theme inline {
@@ -25,9 +109,9 @@ body {
   min-height: 100vh;
   color: var(--text);
   background:
-    radial-gradient(circle at 10% 8%, #1e3a8a66 0%, transparent 42%),
-    radial-gradient(circle at 82% 0%, #f973164d 0%, transparent 34%),
-    linear-gradient(165deg, #090d14 0%, #0f1522 58%, #0b101a 100%);
+    radial-gradient(circle at 10% 8%, var(--glow-a) 0%, transparent 42%),
+    radial-gradient(circle at 82% 0%, var(--glow-b) 0%, transparent 34%),
+    linear-gradient(165deg, var(--bg) 0%, var(--bg-mid) 58%, var(--bg-end) 100%);
   font-family: var(--font-space), sans-serif;
 }
 

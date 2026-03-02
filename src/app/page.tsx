@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
+import { DashboardVisuals } from "@/components/DashboardVisuals";
 import { Nav } from "@/components/Nav";
 import { RangeFilter } from "@/components/RangeFilter";
 import { buildCollectionStats } from "@/lib/stats";
@@ -26,6 +27,7 @@ export default async function Home({ searchParams }: PageProps) {
   const connected = cookieStore.has("spotify_refresh_token");
 
   const snapshots = await readSnapshots();
+  const estimatedHoursPerDay = Number(process.env.ESTIMATED_LISTENING_HOURS_PER_DAY ?? "2");
 
   const songStats = buildCollectionStats(
     snapshots,
@@ -71,11 +73,48 @@ export default async function Home({ searchParams }: PageProps) {
     (i) => i.score,
     { range },
   );
+  const safeHoursPerDay = Number.isFinite(estimatedHoursPerDay) && estimatedHoursPerDay > 0 ? estimatedHoursPerDay : 2;
+  const filteredSnapshots = snapshots.filter((snapshot) => {
+    const capturedAt = new Date(snapshot.capturedAt);
+    return capturedAt >= range.start && capturedAt <= range.end;
+  });
+  const timeline = filteredSnapshots.map((snapshot, index) => {
+    const startAt = new Date(snapshot.capturedAt);
+    const nextAt = filteredSnapshots[index + 1] ? new Date(filteredSnapshots[index + 1].capturedAt) : range.end;
+    const intervalHours = Math.max(0, (nextAt.getTime() - startAt.getTime()) / (1000 * 60 * 60));
+    const estimatedHours = intervalHours * (safeHoursPerDay / 24);
+    return {
+      date: startAt.toISOString().slice(5, 10),
+      hours: Number(estimatedHours.toFixed(2)),
+    };
+  });
+  const domainSlices = [
+    { name: "Songs", value: songStats.reduce((sum, item) => sum + item.totalHours, 0) },
+    { name: "Albums", value: albumStats.reduce((sum, item) => sum + item.totalHours, 0) },
+    { name: "Artists", value: artistStats.reduce((sum, item) => sum + item.totalHours, 0) },
+    { name: "Genres", value: genreStats.reduce((sum, item) => sum + item.totalHours, 0) },
+  ];
+  const genreSlices = genreStats.slice(0, 6).map((item) => ({ name: item.name, value: item.totalHours }));
+  const bubbles = songStats.slice(0, 18).map((item) => ({
+    name: item.name,
+    hours: item.totalHours,
+    appearances: item.appearances,
+    score: item.avgScore,
+    bubble: Math.max(20, Math.round(item.totalHours * 14)),
+  }));
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 pt-20 md:px-8 lg:pl-72 lg:pt-8">
       <header className="mb-6">
-        <h1 className="text-3xl font-bold text-[var(--text)]">Spotify Tracker</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-3xl font-bold text-[var(--text)]">Spotify Tracker</h1>
+          <Link
+            href="/settings/theme"
+            className="inline-flex rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm font-semibold hover:brightness-110"
+          >
+            Settings
+          </Link>
+        </div>
         <p className="mt-2 text-sm text-[var(--muted)]">
           Track your songs, albums, and artists over time.
         </p>
@@ -143,6 +182,12 @@ export default async function Home({ searchParams }: PageProps) {
               secondary={genreStats[0] ? `${genreStats[0].totalHours.toFixed(2)}h` : "Run Sync now"}
             />
           </section>
+          <DashboardVisuals
+            domainSlices={domainSlices}
+            genreSlices={genreSlices}
+            bubbles={bubbles}
+            timeline={timeline}
+          />
 
           <section className="mt-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
             <h2 className="text-lg font-semibold">Drill down</h2>
