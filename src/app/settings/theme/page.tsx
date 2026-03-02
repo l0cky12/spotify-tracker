@@ -79,7 +79,7 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
         ) : null}
         {importState === "failed" ? (
           <p className="mt-3 rounded-lg border border-rose-500/50 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
-            Import failed{importReason ? `: ${decodeURIComponent(importReason)}` : "."}
+            Import failed{importReason ? `: ${importReason}` : "."}
           </p>
         ) : null}
         <form action="/api/settings/import-data" method="post" encType="multipart/form-data" className="mt-4 space-y-3">

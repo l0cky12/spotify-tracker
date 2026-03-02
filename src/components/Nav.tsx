@@ -10,7 +10,6 @@ const links = [
   { href: "/albums", label: "Albums" },
   { href: "/artists", label: "Artists" },
   { href: "/genres", label: "Genres" },
-  { href: "/settings/theme", label: "Theme" },
 ];
 
 export function Nav() {
@@ -48,7 +47,7 @@ export function Nav() {
       ) : null}
 
       <nav
-        className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-[var(--stroke)] bg-[var(--panel-strong)] p-4 shadow-[0_0_45px_rgba(0,0,0,0.4)] transition-transform duration-200 lg:translate-x-0 ${
+        className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-[var(--stroke)] bg-[var(--panel-strong)]/95 p-4 shadow-[0_0_45px_rgba(0,0,0,0.4)] backdrop-blur-md transition-transform duration-200 lg:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -86,6 +85,17 @@ export function Nav() {
         </div>
 
         <div className="mt-auto space-y-2">
+          <Link
+            href={`/settings/theme${suffix}`}
+            onClick={() => setOpen(false)}
+            className={`block w-full rounded-lg px-3 py-2 text-center text-sm font-semibold transition ${
+              pathname === "/settings/theme"
+                ? "bg-[var(--accent)] text-[var(--accent-ink)]"
+                : "border border-[var(--stroke)] bg-[var(--panel-soft)] text-[var(--text)] hover:brightness-110"
+            }`}
+          >
+            Settings
+          </Link>
           <form action="/api/sync" method="post">
             <button
               type="submit"

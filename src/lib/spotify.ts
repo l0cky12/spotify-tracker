@@ -117,6 +117,16 @@ type TopArtistsResponse = {
   }>;
 };
 
+export type CurrentlyPlaying = {
+  trackName: string;
+  artistName: string;
+  albumName: string;
+  imageUrl: string;
+  progressMs: number;
+  durationMs: number;
+  isPlaying: boolean;
+};
+
 export async function fetchSnapshot(accessToken: string): Promise<Snapshot> {
   const [tracksRes, artistsRes] = await Promise.all([
     spotifyGet<TopTracksResponse>(accessToken, "/me/top/tracks?limit=50&time_range=medium_term"),
@@ -202,6 +212,52 @@ export async function fetchSnapshot(accessToken: string): Promise<Snapshot> {
     artists,
     albums,
     genres,
+  };
+}
+
+export async function fetchCurrentlyPlaying(accessToken: string): Promise<CurrentlyPlaying | null> {
+  const response = await fetch(`${SPOTIFY_API_BASE}/me/player/currently-playing`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    cache: "no-store",
+  });
+
+  if (response.status === 204 || response.status === 202) {
+    return null;
+  }
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Spotify currently-playing failed: ${response.status} ${detail.slice(0, 180)}`);
+  }
+
+  const json = (await response.json()) as {
+    is_playing?: boolean;
+    progress_ms?: number;
+    item?: {
+      name?: string;
+      duration_ms?: number;
+      album?: {
+        name?: string;
+        images?: Array<{ url?: string }>;
+      };
+      artists?: Array<{ name?: string }>;
+    };
+  };
+
+  if (!json.item?.name) {
+    return null;
+  }
+
+  return {
+    trackName: json.item.name ?? "Unknown track",
+    artistName: (json.item.artists ?? []).map((artist) => artist.name).filter(Boolean).join(", ") || "Unknown artist",
+    albumName: json.item.album?.name ?? "Unknown album",
+    imageUrl: json.item.album?.images?.[0]?.url ?? "",
+    progressMs: json.progress_ms ?? 0,
+    durationMs: json.item.duration_ms ?? 0,
+    isPlaying: Boolean(json.is_playing),
   };
 }
 

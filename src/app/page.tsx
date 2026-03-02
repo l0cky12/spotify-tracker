@@ -12,6 +12,7 @@ import {
 } from "@/lib/display-unit";
 import { RangeFilter } from "@/components/RangeFilter";
 import { buildCollectionStats, snapshotsInRange } from "@/lib/stats";
+import { fetchCurrentlyPlaying, refreshAccessToken } from "@/lib/spotify";
 import { readSnapshots } from "@/lib/storage";
 import { resolveTimeRange } from "@/lib/time-range";
 
@@ -36,10 +37,21 @@ export default async function Home({ searchParams }: PageProps) {
 
   const cookieStore = await cookies();
   const connected = cookieStore.has("spotify_refresh_token");
+  const refreshToken = cookieStore.get("spotify_refresh_token")?.value;
   const displayUnit = parseDisplayUnit(cookieStore.get(DISPLAY_UNIT_COOKIE)?.value);
   const unitLabel = displayUnitLabel(displayUnit);
   const unitSuffix = displayUnitSuffix(displayUnit);
   const toDisplay = (hours: number) => convertHoursForDisplay(hours, displayUnit);
+
+  let currentlyPlaying: Awaited<ReturnType<typeof fetchCurrentlyPlaying>> = null;
+  if (connected && refreshToken) {
+    try {
+      const accessToken = await refreshAccessToken(refreshToken);
+      currentlyPlaying = await fetchCurrentlyPlaying(accessToken);
+    } catch (error) {
+      console.error("Failed to fetch currently playing track", error);
+    }
+  }
 
   const snapshots = await readSnapshots();
   const filteredSnapshots = snapshotsInRange(snapshots, range);
@@ -115,16 +127,8 @@ export default async function Home({ searchParams }: PageProps) {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 pt-20 md:px-8 lg:pl-72 lg:pt-8">
-      <header className="mb-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-3xl font-bold text-[var(--text)]">Spotify Tracker</h1>
-          <Link
-            href="/settings/theme"
-            className="inline-flex rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm font-semibold hover:brightness-110"
-          >
-            Settings
-          </Link>
-        </div>
+      <header className="mb-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)]/90 p-6 shadow-[0_12px_30px_rgba(0,0,0,0.25)] backdrop-blur-sm">
+        <h1 className="text-3xl font-bold text-[var(--text)]">Spotify Tracker</h1>
         <p className="mt-2 text-sm text-[var(--muted)]">
           Track your songs, albums, and artists over time.
         </p>
@@ -145,6 +149,25 @@ export default async function Home({ searchParams }: PageProps) {
       ) : (
         <>
           <Nav />
+          <section className="mt-4 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-4 shadow-[0_10px_24px_rgba(0,0,0,0.2)]">
+            <p className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">Now Playing</p>
+            {currentlyPlaying ? (
+              <div className="mt-3 flex items-center gap-3">
+                {currentlyPlaying.imageUrl ? (
+                  <img src={currentlyPlaying.imageUrl} alt={currentlyPlaying.albumName} className="h-14 w-14 rounded-md object-cover" />
+                ) : null}
+                <div className="min-w-0">
+                  <p className="truncate text-base font-semibold">{currentlyPlaying.trackName}</p>
+                  <p className="truncate text-sm text-[var(--muted)]">{currentlyPlaying.artistName}</p>
+                  <p className="truncate text-xs text-[var(--muted)]">
+                    {currentlyPlaying.isPlaying ? "Playing now" : "Paused"} • {currentlyPlaying.albumName}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p className="mt-3 text-sm text-[var(--muted)]">Nothing currently playing or playback is private.</p>
+            )}
+          </section>
           {syncedParam === "1" ? (
             <p className="mt-4 rounded-lg border border-emerald-500/50 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
               Sync completed.
