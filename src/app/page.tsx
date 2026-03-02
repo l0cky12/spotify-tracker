@@ -130,7 +130,7 @@ export default async function Home({ searchParams }: PageProps) {
       <header className="mb-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)]/90 p-6 shadow-[0_12px_30px_rgba(0,0,0,0.25)] backdrop-blur-sm">
         <h1 className="text-3xl font-bold text-[var(--text)]">Spotify Tracker</h1>
         <p className="mt-2 text-sm text-[var(--muted)]">
-          Track your songs, albums, and artists over time.
+          Track your songs, albums, and artists with sync or JSON import.
         </p>
       </header>
 
@@ -186,7 +186,7 @@ export default async function Home({ searchParams }: PageProps) {
           </p>
 
           <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-5">
-            <StatCard label="Snapshots" value={String(filteredSnapshots.length)} />
+            <StatCard label="Data Points" value={String(filteredSnapshots.length)} />
             <StatCard
               label={`Songs (${unitLabel})`}
               value={formatEstimatedDuration(songStats.reduce((sum, item) => sum + item.totalHours, 0), displayUnit, {
@@ -247,7 +247,7 @@ export default async function Home({ searchParams }: PageProps) {
             <h2 className="text-lg font-semibold">Drill down</h2>
             {!filteredSnapshots.length && snapshots.length > 0 ? (
               <p className="mt-2 text-sm text-[var(--muted)]">
-                No snapshots found in this range. Try widening the date range or selecting All time.
+                No synced/imported data found in this range. Try widening the date range or selecting All time.
               </p>
             ) : null}
             <div className="mt-4 flex flex-wrap gap-3">

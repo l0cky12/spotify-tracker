@@ -1,17 +1,17 @@
 # Spotify Tracker
 
-A private Spotify tracking app that stores snapshots over time and gives you dedicated views for songs, albums, and artists.
+A private Spotify tracking app that stores synced/imported Spotify data over time and gives you dedicated views for songs, albums, and artists.
 
 ## Features
 
 - Spotify OAuth connect/disconnect
-- Manual sync to snapshot top songs/artists (albums derived from tracks)
+- Manual sync to your top songs/artists (albums derived from tracks)
 - Genre tracking derived from your top artists
 - Estimated listening hours by songs, albums, artists, and genres
 - Advanced dashboard visuals (pie and timeline charts)
 - Theme settings page with presets (dark, light, nord, matrix, sunset)
 - Display unit setting (hours or minutes)
-- JSON snapshot import in Settings (merge or replace)
+- JSON Spotify-data import in Settings (merge or replace)
 - Persistent history in `data/snapshots.json`
 - Home dashboard with overview stats
 - Dedicated pages:
@@ -31,7 +31,7 @@ Dashboard and drill-down pages support:
 - All time
 - Custom date range
 
-Listening hours are estimated from snapshot ranking scores over time windows.
+Listening hours are estimated from ranking scores over time windows.
 You can tune the baseline with `ESTIMATED_LISTENING_HOURS_PER_DAY` (default `2`).
 
 ## Tech stack

@@ -68,13 +68,13 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
       </section>
 
       <section className="mt-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
-        <h2 className="text-lg font-semibold">Import Snapshot JSON</h2>
+        <h2 className="text-lg font-semibold">Import Spotify JSON</h2>
         <p className="mt-1 text-sm text-[var(--muted)]">
-          Upload a JSON export to merge into existing data or replace all stored snapshots.
+          Upload Spotify JSON stats to merge into existing data or replace all stored data.
         </p>
         {importState === "ok" ? (
           <p className="mt-3 rounded-lg border border-emerald-500/50 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
-            Import complete: {importCount ?? "0"} snapshots ({importMode ?? "merge"} mode).
+            Import complete: {importCount ?? "0"} data points ({importMode ?? "merge"} mode).
           </p>
         ) : null}
         {importState === "failed" ? (

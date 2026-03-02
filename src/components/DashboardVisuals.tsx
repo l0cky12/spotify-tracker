@@ -85,7 +85,7 @@ export function DashboardVisuals({ unitLabel, unitSuffix, domainSlices, genreSli
 
       <article className="rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-4">
         <p className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">Timeline</p>
-        <h3 className="mt-2 text-lg font-semibold">Estimated {unitLabel} by Snapshot Interval</h3>
+        <h3 className="mt-2 text-lg font-semibold">Estimated {unitLabel} by Sync Interval</h3>
         <div className="mt-4 h-72 min-w-0">
           <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={240}>
             <ScatterChart margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
