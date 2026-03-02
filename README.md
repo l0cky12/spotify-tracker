@@ -62,12 +62,14 @@ cp .env.example .env
 
 ```text
 SPOTIFY_REDIRECT_URI=http://localhost:3000/api/auth/callback
+APP_BASE_URL=http://localhost:3000
 ```
 
 3. For a real deployment URL, set:
 
 ```text
 SPOTIFY_REDIRECT_URI=https://your-domain.com/api/auth/callback
+APP_BASE_URL=https://your-domain.com
 ```
 
 4. Add the same callback URL in your Spotify app settings.
@@ -81,6 +83,11 @@ docker compose up -d --build
 6. Open `http://localhost:3000`.
 
 Data is persisted via `./data:/app/data`, so snapshots survive container restarts.
+
+### Cloudflare Tunnel Note
+
+If you run behind Cloudflare Tunnel or another reverse proxy, set `APP_BASE_URL` to your public HTTPS domain.
+This prevents redirects from using internal bind addresses like `0.0.0.0`.
 
 ## Notes
 

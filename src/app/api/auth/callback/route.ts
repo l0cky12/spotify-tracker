@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getAppBaseUrl } from "@/lib/app-url";
 import { exchangeCodeForRefreshToken } from "@/lib/spotify";
 
 export async function GET(request: NextRequest) {
@@ -11,7 +12,7 @@ export async function GET(request: NextRequest) {
   try {
     const token = await exchangeCodeForRefreshToken(code);
 
-    const response = NextResponse.redirect(new URL("/", request.url));
+    const response = NextResponse.redirect(new URL("/", getAppBaseUrl(request)));
     response.cookies.set("spotify_refresh_token", token.refresh_token, {
       httpOnly: true,
       secure: true,
