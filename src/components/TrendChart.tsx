@@ -30,7 +30,7 @@ export function TrendChart({ points }: { points: Point[] }) {
           <Line
             type="monotone"
             dataKey="rank"
-            stroke="#22c55e"
+            stroke="#f97316"
             strokeWidth={2}
             dot={false}
           />

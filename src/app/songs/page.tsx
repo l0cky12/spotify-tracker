@@ -17,12 +17,12 @@ export default async function SongsPage() {
   ).slice(0, 20);
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8 md:px-8">
+    <main className="mx-auto max-w-6xl px-4 py-8 pt-20 md:px-8 lg:pl-72 lg:pt-8">
       <h1 className="mb-4 text-3xl font-bold">Songs</h1>
       <Nav />
       <div className="mt-6 space-y-4">
         {songs.map((song) => (
-          <article key={song.id} className="rounded-xl border border-emerald-900/30 bg-[var(--panel)] p-4">
+          <article key={song.id} className="rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-4">
             <div className="flex flex-col gap-4 md:flex-row md:items-center">
               <img src={song.imageUrl} alt={song.name} className="h-16 w-16 object-cover" />
               <div className="min-w-0 flex-1">

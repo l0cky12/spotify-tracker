@@ -43,22 +43,22 @@ export default async function Home() {
   );
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8 md:px-8">
+    <main className="mx-auto max-w-6xl px-4 py-8 pt-20 md:px-8 lg:pl-72 lg:pt-8">
       <header className="mb-6">
-        <h1 className="text-3xl font-bold">Spotify Tracker</h1>
+        <h1 className="text-3xl font-bold text-[var(--text)]">Spotify Tracker</h1>
         <p className="mt-2 text-sm text-[var(--muted)]">
           Track your songs, albums, and artists over time.
         </p>
       </header>
 
       {!connected ? (
-        <section className="rounded-xl border border-emerald-900/30 bg-[var(--panel)] p-6">
+        <section className="rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
           <p className="mb-4 text-sm text-[var(--muted)]">
             Connect your Spotify account to start collecting snapshots.
           </p>
           <a
             href="/api/auth/login"
-            className="inline-flex rounded-md bg-[var(--accent)] px-4 py-2 font-semibold text-black"
+            className="inline-flex rounded-md bg-[var(--accent)] px-4 py-2 font-semibold text-[var(--accent-ink)] hover:brightness-110"
           >
             Connect Spotify
           </a>
@@ -92,16 +92,25 @@ export default async function Home() {
             />
           </section>
 
-          <section className="mt-6 rounded-xl border border-emerald-900/30 bg-[var(--panel)] p-5">
+          <section className="mt-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
             <h2 className="text-lg font-semibold">Drill down</h2>
             <div className="mt-4 flex flex-wrap gap-3">
-              <Link href="/songs" className="rounded-md bg-[var(--panel-soft)] px-3 py-2 text-sm">
+              <Link
+                href="/songs"
+                className="rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm hover:brightness-110"
+              >
                 Songs page
               </Link>
-              <Link href="/albums" className="rounded-md bg-[var(--panel-soft)] px-3 py-2 text-sm">
+              <Link
+                href="/albums"
+                className="rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm hover:brightness-110"
+              >
                 Albums page
               </Link>
-              <Link href="/artists" className="rounded-md bg-[var(--panel-soft)] px-3 py-2 text-sm">
+              <Link
+                href="/artists"
+                className="rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm hover:brightness-110"
+              >
                 Artists page
               </Link>
             </div>
@@ -114,7 +123,7 @@ export default async function Home() {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <article className="rounded-xl border border-emerald-900/30 bg-[var(--panel)] p-4">
+    <article className="rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-4">
       <p className="text-xs uppercase tracking-wide text-[var(--muted)]">{label}</p>
       <p className="mt-2 text-2xl font-bold">{value}</p>
     </article>
@@ -131,7 +140,7 @@ function TopCard({
   secondary: string;
 }) {
   return (
-    <article className="rounded-xl border border-emerald-900/30 bg-[var(--panel)] p-4">
+    <article className="rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-4">
       <p className="text-xs uppercase tracking-wide text-[var(--muted)]">{title}</p>
       <p className="mt-3 text-lg font-semibold">{primary}</p>
       <p className="mt-1 text-sm text-[var(--muted)]">{secondary}</p>
