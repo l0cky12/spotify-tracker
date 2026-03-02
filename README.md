@@ -50,6 +50,38 @@ npm run dev
 
 6. Open `http://localhost:3000` and click **Connect Spotify**.
 
+## Docker Deploy
+
+1. Copy env template and set values:
+
+```bash
+cp .env.example .env
+```
+
+2. For local Docker, keep:
+
+```text
+SPOTIFY_REDIRECT_URI=http://localhost:3000/api/auth/callback
+```
+
+3. For a real deployment URL, set:
+
+```text
+SPOTIFY_REDIRECT_URI=https://your-domain.com/api/auth/callback
+```
+
+4. Add the same callback URL in your Spotify app settings.
+
+5. Build and run:
+
+```bash
+docker compose up -d --build
+```
+
+6. Open `http://localhost:3000`.
+
+Data is persisted via `./data:/app/data`, so snapshots survive container restarts.
+
 ## Notes
 
 - This is a single-user MVP. Refresh token is stored as an HTTP-only cookie.
