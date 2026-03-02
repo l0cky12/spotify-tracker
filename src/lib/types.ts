@@ -1,50 +1,14 @@
-export type SpotifyImage = {
-  url: string;
-  width: number | null;
-  height: number | null;
-};
-
-export type TrackStat = {
-  id: string;
-  name: string;
-  artistName: string;
-  albumId: string;
-  albumName: string;
-  imageUrl: string;
-  rank: number;
-  score: number;
-};
-
-export type ArtistStat = {
-  id: string;
-  name: string;
-  imageUrl: string;
-  rank: number;
-  score: number;
-};
-
-export type AlbumStat = {
-  id: string;
-  name: string;
-  artistName: string;
-  imageUrl: string;
-  rank: number;
-  score: number;
-};
-
-export type GenreStat = {
-  id: string;
-  name: string;
-  rank: number;
-  score: number;
-};
-
-export type Snapshot = {
-  capturedAt: string;
-  tracks: TrackStat[];
-  artists: ArtistStat[];
-  albums: AlbumStat[];
-  genres?: GenreStat[];
+export type HistoryEntry = {
+  ts: string;
+  ms_played: number;
+  master_metadata_track_name: string | null;
+  master_metadata_album_artist_name: string | null;
+  master_metadata_album_album_name: string | null;
+  spotify_track_uri: string | null;
+  reason_start?: string | null;
+  reason_end?: string | null;
+  shuffle?: boolean;
+  skipped?: boolean;
 };
 
 export type CollectionStats = {
@@ -53,8 +17,8 @@ export type CollectionStats = {
   imageUrl?: string;
   subtitle?: string;
   currentRank: number;
-  appearances: number;
-  avgScore: number;
+  playCount: number;
+  avgMinutes: number;
   totalHours: number;
-  trend: { capturedAt: string; rank: number; score: number }[];
+  trend: { capturedAt: string; value: number }[];
 };

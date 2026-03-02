@@ -5,7 +5,7 @@ import { RangeFilter } from "@/components/RangeFilter";
 import { TrendChart } from "@/components/TrendChart";
 import { DISPLAY_UNIT_COOKIE, formatEstimatedDuration, parseDisplayUnit } from "@/lib/display-unit";
 import { buildCollectionStats } from "@/lib/stats";
-import { readSnapshots } from "@/lib/storage";
+import { readHistoryEntries } from "@/lib/storage";
 import { resolveTimeRange } from "@/lib/time-range";
 
 export const dynamic = "force-dynamic";
@@ -33,33 +33,20 @@ export default async function AlbumsPage({ searchParams }: PageProps) {
   if (range.to) query.set("to", range.to);
   const rangeQuery = query.toString();
 
-  const snapshots = await readSnapshots();
-  const albums = buildCollectionStats(
-    snapshots,
-    (s) => s.albums,
-    (i) => i.id,
-    (i) => i.name,
-    (i) => i.imageUrl,
-    (i) => i.artistName,
-    (i) => i.rank,
-    (i) => i.score,
-    { range },
-  ).slice(0, 20);
+  const entries = await readHistoryEntries();
+  const albums = buildCollectionStats(entries, "albums", range).slice(0, 50);
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 pt-20 md:px-8 lg:pl-72 lg:pt-8">
       <h1 className="mb-4 text-3xl font-bold">Albums</h1>
       <Nav />
       <RangeFilter selectedRange={range.preset} from={range.from} to={range.to} />
-      <p className="mt-3 text-xs uppercase tracking-wide text-[var(--muted)]">
-        Range: {range.label}
-      </p>
+      <p className="mt-3 text-xs uppercase tracking-wide text-[var(--muted)]">Range: {range.label}</p>
       <div className="mt-6 space-y-4">
         {albums.length ? (
           albums.map((album) => (
             <article key={album.id} className="rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-4">
               <div className="flex flex-col gap-4 md:flex-row md:items-center">
-                <img src={album.imageUrl} alt={album.name} className="h-16 w-16 object-cover" />
                 <div className="min-w-0 flex-1">
                   <Link
                     href={`/albums/${encodeURIComponent(album.id)}?${rangeQuery}`}
@@ -69,7 +56,7 @@ export default async function AlbumsPage({ searchParams }: PageProps) {
                   </Link>
                   <p className="text-sm text-[var(--muted)]">{album.subtitle}</p>
                   <p className="text-xs text-[var(--muted)]">
-                    Estimated listened: {formatEstimatedDuration(album.totalHours, displayUnit)} • Appearances: {album.appearances} • Avg score: {album.avgScore}
+                    Listened: {formatEstimatedDuration(album.totalHours, displayUnit)} • Plays: {album.playCount} • Avg length: {album.avgMinutes.toFixed(1)}m
                   </p>
                 </div>
                 <div className="w-full md:w-72">
@@ -80,7 +67,7 @@ export default async function AlbumsPage({ searchParams }: PageProps) {
           ))
         ) : (
           <article className="rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-4 text-sm text-[var(--muted)]">
-            No album data yet. Run Sync now on the dashboard.
+            No album data yet. Import Spotify JSON in Settings.
           </article>
         )}
       </div>

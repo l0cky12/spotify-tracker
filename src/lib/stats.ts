@@ -1,117 +1,120 @@
-import { CollectionStats, Snapshot } from "./types";
+import { CollectionStats, HistoryEntry } from "./types";
 import { TimeRange } from "./time-range";
 
-export function latestSnapshot(snapshots: Snapshot[]): Snapshot | undefined {
-  return snapshots[snapshots.length - 1];
-}
+export type StatsKind = "songs" | "albums" | "artists" | "genres";
 
-type ItemGetter<T> = (snapshot: Snapshot) => T[];
-type IdGetter<T> = (item: T) => string;
-type NameGetter<T> = (item: T) => string;
-type ImageGetter<T> = (item: T) => string;
-type SubGetter<T> = (item: T) => string | undefined;
-type RankGetter<T> = (item: T) => number;
-type ScoreGetter<T> = (item: T) => number;
+type Aggregated = {
+  id: string;
+  name: string;
+  subtitle?: string;
+  totalMs: number;
+  playCount: number;
+  trendByDay: Map<string, number>;
+};
 
-function parseSnapshotDate(value: string): Date | undefined {
+function parseDate(value: string): Date | null {
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? undefined : date;
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
-export function snapshotsInRange(snapshots: Snapshot[], range?: TimeRange): Snapshot[] {
-  if (!range) return snapshots;
-  return snapshots.filter((snapshot) => {
-    const capturedAt = parseSnapshotDate(snapshot.capturedAt);
-    if (!capturedAt) return false;
-    return capturedAt >= range.start && capturedAt <= range.end;
+function dayKey(ts: string): string {
+  return ts.slice(0, 10);
+}
+
+function normalizeText(value: string | null | undefined, fallback: string): string {
+  const out = (value ?? "").trim();
+  return out.length ? out : fallback;
+}
+
+function getGenreName(entry: HistoryEntry): string {
+  const album = normalizeText(entry.master_metadata_album_album_name, "Unknown album").toLowerCase();
+  const artist = normalizeText(entry.master_metadata_album_artist_name, "Unknown artist").toLowerCase();
+
+  if (album.includes("greatest hits") || album.includes("best of")) return "Compilation";
+  if (artist.includes("dj") || album.includes("mix") || album.includes("remix")) return "Electronic / Mix";
+  if (album.includes("live")) return "Live";
+  return "Unknown";
+}
+
+export function entriesInRange(entries: HistoryEntry[], range?: TimeRange): HistoryEntry[] {
+  if (!range) return entries;
+  return entries.filter((entry) => {
+    const date = parseDate(entry.ts);
+    if (!date) return false;
+    return date >= range.start && date <= range.end;
   });
 }
 
-export function buildCollectionStats<T>(
-  snapshots: Snapshot[],
-  getItems: ItemGetter<T>,
-  getId: IdGetter<T>,
-  getName: NameGetter<T>,
-  getImage: ImageGetter<T>,
-  getSubtitle: SubGetter<T>,
-  getRank: RankGetter<T>,
-  getScore: ScoreGetter<T>,
-  options?: {
-    range?: TimeRange;
-    estimatedHoursPerDay?: number;
-  },
-): CollectionStats[] {
-  const range = options?.range;
-  const envHours = Number(process.env.ESTIMATED_LISTENING_HOURS_PER_DAY ?? "2");
-  const estimatedHoursPerDay = options?.estimatedHoursPerDay ?? (Number.isFinite(envHours) && envHours > 0 ? envHours : 2);
-  const windowedSnapshots = snapshotsInRange(snapshots, range);
+function keyForKind(entry: HistoryEntry, kind: StatsKind): { id: string; name: string; subtitle?: string } {
+  const track = normalizeText(entry.master_metadata_track_name, "Unknown track");
+  const artist = normalizeText(entry.master_metadata_album_artist_name, "Unknown artist");
+  const album = normalizeText(entry.master_metadata_album_album_name, "Unknown album");
 
-  const latest = latestSnapshot(windowedSnapshots);
-  if (!latest) return [];
-
-  const currentRanks = new Map<string, number>();
-  for (const item of getItems(latest)) {
-    currentRanks.set(getId(item), getRank(item));
+  if (kind === "songs") {
+    const id = entry.spotify_track_uri?.trim() || `${track}::${artist}`;
+    return { id, name: track, subtitle: artist };
   }
 
-  const store = new Map<string, CollectionStats>();
+  if (kind === "albums") {
+    const id = `${album}::${artist}`;
+    return { id, name: album, subtitle: artist };
+  }
 
-  for (let index = 0; index < windowedSnapshots.length; index += 1) {
-    const snapshot = windowedSnapshots[index];
-    const snapshotAt = parseSnapshotDate(snapshot.capturedAt);
-    if (!snapshotAt) continue;
-    const nextSnapshot = windowedSnapshots[index + 1];
-    const nextAt =
-      (nextSnapshot ? parseSnapshotDate(nextSnapshot.capturedAt) : undefined) ?? new Date();
+  if (kind === "artists") {
+    return { id: artist, name: artist };
+  }
 
-    const clampedStart = range ? new Date(Math.max(snapshotAt.getTime(), range.start.getTime())) : snapshotAt;
-    const clampedEnd = range ? new Date(Math.min(nextAt.getTime(), range.end.getTime())) : nextAt;
-    const intervalHours = Math.max(0, (clampedEnd.getTime() - clampedStart.getTime()) / (1000 * 60 * 60));
-    const intervalListeningHours = intervalHours * (estimatedHoursPerDay / 24);
+  const genre = getGenreName(entry);
+  return { id: genre.toLowerCase().replace(/\s+/g, "-"), name: genre };
+}
 
-    const items = getItems(snapshot);
-    const totalScore = items.reduce((sum, item) => sum + Math.max(getScore(item), 0), 0);
+export function buildCollectionStats(entries: HistoryEntry[], kind: StatsKind, range?: TimeRange): CollectionStats[] {
+  const filtered = entriesInRange(entries, range).filter((entry) => entry.ms_played > 0);
+  const map = new Map<string, Aggregated>();
 
-    for (const item of items) {
-      const id = getId(item);
-      const existing = store.get(id);
-      const point = {
-        capturedAt: snapshot.capturedAt,
-        rank: getRank(item),
-        score: getScore(item),
-      };
-      const share = totalScore > 0 ? Math.max(getScore(item), 0) / totalScore : 0;
-      const itemHours = intervalListeningHours * share;
+  for (const entry of filtered) {
+    const { id, name, subtitle } = keyForKind(entry, kind);
+    const dateKey = dayKey(entry.ts);
+    const existing = map.get(id);
 
-      if (!existing) {
-        store.set(id, {
-          id,
-          name: getName(item),
-          imageUrl: getImage(item),
-          subtitle: getSubtitle(item),
-          currentRank: currentRanks.get(id) ?? 999,
-          appearances: 1,
-          avgScore: getScore(item),
-          totalHours: itemHours,
-          trend: [point],
-        });
-        continue;
-      }
-
-      existing.appearances += 1;
-      existing.avgScore += getScore(item);
-      existing.totalHours += itemHours;
-      existing.trend.push(point);
-      existing.currentRank = currentRanks.get(id) ?? 999;
+    if (!existing) {
+      const trendByDay = new Map<string, number>();
+      trendByDay.set(dateKey, entry.ms_played);
+      map.set(id, {
+        id,
+        name,
+        subtitle,
+        totalMs: entry.ms_played,
+        playCount: 1,
+        trendByDay,
+      });
+      continue;
     }
+
+    existing.totalMs += entry.ms_played;
+    existing.playCount += 1;
+    existing.trendByDay.set(dateKey, (existing.trendByDay.get(dateKey) ?? 0) + entry.ms_played);
   }
 
-  return Array.from(store.values())
-    .map((entry) => ({
-      ...entry,
-      avgScore: Number((entry.avgScore / entry.appearances).toFixed(2)),
-      totalHours: Number(entry.totalHours.toFixed(2)),
-      trend: entry.trend.sort((a, b) => a.capturedAt.localeCompare(b.capturedAt)),
-    }))
-    .sort((a, b) => b.totalHours - a.totalHours || a.currentRank - b.currentRank || b.avgScore - a.avgScore);
+  const sorted = Array.from(map.values()).sort((a, b) => b.totalMs - a.totalMs || b.playCount - a.playCount);
+
+  return sorted.map((item, index) => {
+    const trend = Array.from(item.trendByDay.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([date, ms]) => ({ capturedAt: `${date}T00:00:00.000Z`, value: Number((ms / 3600000).toFixed(3)) }));
+
+    const totalHours = item.totalMs / 3600000;
+    const avgMinutes = item.totalMs / item.playCount / 60000;
+
+    return {
+      id: item.id,
+      name: item.name,
+      subtitle: item.subtitle,
+      currentRank: index + 1,
+      playCount: item.playCount,
+      avgMinutes: Number(avgMinutes.toFixed(2)),
+      totalHours: Number(totalHours.toFixed(3)),
+      trend,
+    };
+  });
 }

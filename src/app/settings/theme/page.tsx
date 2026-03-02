@@ -70,11 +70,11 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
       <section className="mt-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
         <h2 className="text-lg font-semibold">Import Spotify JSON</h2>
         <p className="mt-1 text-sm text-[var(--muted)]">
-          Upload Spotify JSON stats to merge into existing data or replace all stored data.
+          Upload Spotify streaming history JSON to merge into existing data or replace all stored data.
         </p>
         {importState === "ok" ? (
           <p className="mt-3 rounded-lg border border-emerald-500/50 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
-            Import complete: {importCount ?? "0"} data points ({importMode ?? "merge"} mode).
+            Import complete: {importCount ?? "0"} entries ({importMode ?? "merge"} mode).
           </p>
         ) : null}
         {importState === "failed" ? (
@@ -88,7 +88,7 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
             <span className="mb-1 block text-[var(--muted)]">JSON file</span>
             <input
               type="file"
-              name="snapshotFile"
+              name="historyFile"
               accept=".json,application/json"
               required
               className="w-full rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm"
@@ -101,8 +101,8 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
               defaultValue="merge"
               className="w-full rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm"
             >
-              <option value="merge">Merge with existing snapshots</option>
-              <option value="replace">Replace all existing snapshots</option>
+              <option value="merge">Merge with existing listening history</option>
+              <option value="replace">Replace all existing listening history</option>
             </select>
           </label>
           <button

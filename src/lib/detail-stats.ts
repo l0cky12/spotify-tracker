@@ -1,5 +1,6 @@
-import { Snapshot } from "./types";
+import { HistoryEntry } from "./types";
 import { TimeRange } from "./time-range";
+import { entriesInRange } from "./stats";
 
 export type RelatedTrackStat = {
   id: string;
@@ -7,165 +8,108 @@ export type RelatedTrackStat = {
   artistName: string;
   imageUrl: string;
   hours: number;
-  appearances: number;
+  playCount: number;
 };
 
-type IntervalRow = {
-  snapshot: Snapshot;
-  listeningHours: number;
-};
-
-function parseSnapshotDate(value: string): Date | null {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
+function normalizeText(value: string | null | undefined, fallback: string): string {
+  const out = (value ?? "").trim();
+  return out.length ? out : fallback;
 }
 
-function getEstimatedHoursPerDay(): number {
-  const envHours = Number(process.env.ESTIMATED_LISTENING_HOURS_PER_DAY ?? "2");
-  return Number.isFinite(envHours) && envHours > 0 ? envHours : 2;
+function trackId(entry: HistoryEntry): string {
+  const track = normalizeText(entry.master_metadata_track_name, "Unknown track");
+  const artist = normalizeText(entry.master_metadata_album_artist_name, "Unknown artist");
+  return entry.spotify_track_uri?.trim() || `${track}::${artist}`;
 }
 
-function buildIntervals(snapshots: Snapshot[], range?: TimeRange): IntervalRow[] {
-  const estimatedHoursPerDay = getEstimatedHoursPerDay();
-  const rows: IntervalRow[] = [];
+function addTrack(store: Map<string, RelatedTrackStat>, entry: HistoryEntry) {
+  const id = trackId(entry);
+  const name = normalizeText(entry.master_metadata_track_name, "Unknown track");
+  const artistName = normalizeText(entry.master_metadata_album_artist_name, "Unknown artist");
+  const hours = entry.ms_played / 3600000;
+  const current = store.get(id);
 
-  for (let index = 0; index < snapshots.length; index += 1) {
-    const snapshot = snapshots[index];
-    const snapshotAt = parseSnapshotDate(snapshot.capturedAt);
-    if (!snapshotAt) continue;
-    if (range && (snapshotAt < range.start || snapshotAt > range.end)) continue;
-
-    const nextSnapshot = snapshots[index + 1];
-    const nextAt = (nextSnapshot ? parseSnapshotDate(nextSnapshot.capturedAt) : null) ?? new Date();
-    const clampedStart = range ? new Date(Math.max(snapshotAt.getTime(), range.start.getTime())) : snapshotAt;
-    const clampedEnd = range ? new Date(Math.min(nextAt.getTime(), range.end.getTime())) : nextAt;
-    const intervalHours = Math.max(0, (clampedEnd.getTime() - clampedStart.getTime()) / (1000 * 60 * 60));
-    rows.push({
-      snapshot,
-      listeningHours: intervalHours * (estimatedHoursPerDay / 24),
-    });
-  }
-
-  return rows;
-}
-
-function mergeTrackRow(
-  store: Map<string, RelatedTrackStat>,
-  track: Snapshot["tracks"][number],
-  hours: number,
-) {
-  const existing = store.get(track.id);
-  if (!existing) {
-    store.set(track.id, {
-      id: track.id,
-      name: track.name,
-      artistName: track.artistName,
-      imageUrl: track.imageUrl,
+  if (!current) {
+    store.set(id, {
+      id,
+      name,
+      artistName,
+      imageUrl: "",
       hours,
-      appearances: 1,
+      playCount: 1,
     });
     return;
   }
 
-  existing.hours += hours;
-  existing.appearances += 1;
+  current.hours += hours;
+  current.playCount += 1;
 }
 
-export function buildSongRelatedTracks(snapshots: Snapshot[], range: TimeRange | undefined, songId: string): RelatedTrackStat[] {
-  const store = new Map<string, RelatedTrackStat>();
-
-  for (const { snapshot, listeningHours } of buildIntervals(snapshots, range)) {
-    const track = snapshot.tracks.find((item) => item.id === songId);
-    if (!track || listeningHours <= 0) continue;
-
-    const totalTrackScore = snapshot.tracks.reduce((sum, item) => sum + Math.max(item.score, 0), 0);
-    const hours = totalTrackScore > 0 ? listeningHours * (Math.max(track.score, 0) / totalTrackScore) : 0;
-    if (hours <= 0) continue;
-    mergeTrackRow(store, track, hours);
-  }
-
+function sortStats(store: Map<string, RelatedTrackStat>): RelatedTrackStat[] {
   return Array.from(store.values())
-    .map((item) => ({ ...item, hours: Number(item.hours.toFixed(2)) }))
-    .sort((a, b) => b.hours - a.hours || b.appearances - a.appearances);
+    .map((item) => ({ ...item, hours: Number(item.hours.toFixed(3)) }))
+    .sort((a, b) => b.hours - a.hours || b.playCount - a.playCount);
 }
 
-export function buildAlbumRelatedTracks(snapshots: Snapshot[], range: TimeRange | undefined, albumId: string): RelatedTrackStat[] {
+export function buildSongRelatedTracks(entries: HistoryEntry[], range: TimeRange | undefined, songId: string): RelatedTrackStat[] {
+  const store = new Map<string, RelatedTrackStat>();
+  for (const entry of entriesInRange(entries, range)) {
+    if (trackId(entry) !== songId) continue;
+    addTrack(store, entry);
+  }
+  return sortStats(store);
+}
+
+export function buildAlbumRelatedTracks(entries: HistoryEntry[], range: TimeRange | undefined, albumId: string): RelatedTrackStat[] {
   const store = new Map<string, RelatedTrackStat>();
 
-  for (const { snapshot, listeningHours } of buildIntervals(snapshots, range)) {
-    if (listeningHours <= 0) continue;
-    const totalTrackScore = snapshot.tracks.reduce((sum, item) => sum + Math.max(item.score, 0), 0);
-    if (totalTrackScore <= 0) continue;
-
-    for (const track of snapshot.tracks) {
-      if (track.albumId !== albumId) continue;
-      const hours = listeningHours * (Math.max(track.score, 0) / totalTrackScore);
-      if (hours <= 0) continue;
-      mergeTrackRow(store, track, hours);
-    }
+  for (const entry of entriesInRange(entries, range)) {
+    const album = normalizeText(entry.master_metadata_album_album_name, "Unknown album");
+    const artist = normalizeText(entry.master_metadata_album_artist_name, "Unknown artist");
+    const id = `${album}::${artist}`;
+    if (id !== albumId) continue;
+    addTrack(store, entry);
   }
 
-  return Array.from(store.values())
-    .map((item) => ({ ...item, hours: Number(item.hours.toFixed(2)) }))
-    .sort((a, b) => b.hours - a.hours || b.appearances - a.appearances);
+  return sortStats(store);
 }
 
 export function buildArtistRelatedTracks(
-  snapshots: Snapshot[],
+  entries: HistoryEntry[],
   range: TimeRange | undefined,
   artistId: string,
-  artistName: string,
 ): RelatedTrackStat[] {
   const store = new Map<string, RelatedTrackStat>();
-  const artistMatch = artistName.toLowerCase();
 
-  for (const { snapshot, listeningHours } of buildIntervals(snapshots, range)) {
-    const artist = snapshot.artists.find((item) => item.id === artistId);
-    if (!artist || listeningHours <= 0) continue;
-    const totalArtistScore = snapshot.artists.reduce((sum, item) => sum + Math.max(item.score, 0), 0);
-    if (totalArtistScore <= 0) continue;
-
-    const artistHours = listeningHours * (Math.max(artist.score, 0) / totalArtistScore);
-    const matchingTracks = snapshot.tracks.filter((track) => track.artistName.toLowerCase().includes(artistMatch));
-    const matchingScore = matchingTracks.reduce((sum, track) => sum + Math.max(track.score, 0), 0);
-    if (!matchingTracks.length || matchingScore <= 0 || artistHours <= 0) continue;
-
-    for (const track of matchingTracks) {
-      const hours = artistHours * (Math.max(track.score, 0) / matchingScore);
-      if (hours <= 0) continue;
-      mergeTrackRow(store, track, hours);
-    }
+  for (const entry of entriesInRange(entries, range)) {
+    const artist = normalizeText(entry.master_metadata_album_artist_name, "Unknown artist");
+    if (artist !== artistId) continue;
+    addTrack(store, entry);
   }
 
-  return Array.from(store.values())
-    .map((item) => ({ ...item, hours: Number(item.hours.toFixed(2)) }))
-    .sort((a, b) => b.hours - a.hours || b.appearances - a.appearances);
+  return sortStats(store);
+}
+
+function genreForEntry(entry: HistoryEntry): string {
+  const album = normalizeText(entry.master_metadata_album_album_name, "Unknown album").toLowerCase();
+  const artist = normalizeText(entry.master_metadata_album_artist_name, "Unknown artist").toLowerCase();
+  if (album.includes("greatest hits") || album.includes("best of")) return "compilation";
+  if (artist.includes("dj") || album.includes("mix") || album.includes("remix")) return "electronic-/-mix";
+  if (album.includes("live")) return "live";
+  return "unknown";
 }
 
 export function buildGenreRelatedTracks(
-  snapshots: Snapshot[],
+  entries: HistoryEntry[],
   range: TimeRange | undefined,
   genreId: string,
 ): RelatedTrackStat[] {
   const store = new Map<string, RelatedTrackStat>();
 
-  for (const { snapshot, listeningHours } of buildIntervals(snapshots, range)) {
-    const genres = snapshot.genres ?? [];
-    const genre = genres.find((item) => item.id === genreId);
-    if (!genre || listeningHours <= 0) continue;
-    const totalGenreScore = genres.reduce((sum, item) => sum + Math.max(item.score, 0), 0);
-    const totalTrackScore = snapshot.tracks.reduce((sum, item) => sum + Math.max(item.score, 0), 0);
-    if (totalGenreScore <= 0 || totalTrackScore <= 0) continue;
-
-    const genreHours = listeningHours * (Math.max(genre.score, 0) / totalGenreScore);
-    for (const track of snapshot.tracks) {
-      const hours = genreHours * (Math.max(track.score, 0) / totalTrackScore);
-      if (hours <= 0) continue;
-      mergeTrackRow(store, track, hours);
-    }
+  for (const entry of entriesInRange(entries, range)) {
+    if (genreForEntry(entry) !== genreId) continue;
+    addTrack(store, entry);
   }
 
-  return Array.from(store.values())
-    .map((item) => ({ ...item, hours: Number(item.hours.toFixed(2)) }))
-    .sort((a, b) => b.hours - a.hours || b.appearances - a.appearances);
+  return sortStats(store);
 }

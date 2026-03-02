@@ -1,5 +1,3 @@
-import { AlbumStat, ArtistStat, Snapshot, TrackStat } from "./types";
-
 const SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token";
 const SPOTIFY_API_BASE = "https://api.spotify.com/v1";
 
@@ -79,44 +77,6 @@ export async function refreshAccessToken(refreshToken: string): Promise<string> 
   return json.access_token;
 }
 
-async function spotifyGet<T>(accessToken: string, endpoint: string): Promise<T> {
-  const response = await fetch(`${SPOTIFY_API_BASE}${endpoint}`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(`Spotify API request failed: ${response.status} ${endpoint} ${detail.slice(0, 180)}`);
-  }
-
-  return (await response.json()) as T;
-}
-
-type TopTracksResponse = {
-  items: Array<{
-    id: string;
-    name: string;
-    album: {
-      id: string;
-      name: string;
-      images: Array<{ url: string }>;
-    };
-    artists: Array<{ name: string }>;
-  }>;
-};
-
-type TopArtistsResponse = {
-  items: Array<{
-    id: string;
-    name: string;
-    images: Array<{ url: string }>;
-    genres: string[];
-  }>;
-};
-
 export type CurrentlyPlaying = {
   trackName: string;
   artistName: string;
@@ -126,94 +86,6 @@ export type CurrentlyPlaying = {
   durationMs: number;
   isPlaying: boolean;
 };
-
-export async function fetchSnapshot(accessToken: string): Promise<Snapshot> {
-  const [tracksRes, artistsRes] = await Promise.all([
-    spotifyGet<TopTracksResponse>(accessToken, "/me/top/tracks?limit=50&time_range=medium_term"),
-    spotifyGet<TopArtistsResponse>(accessToken, "/me/top/artists?limit=50&time_range=medium_term"),
-  ]);
-
-  const tracks: TrackStat[] = tracksRes.items.map((track, idx) => ({
-    id: track.id,
-    name: track.name,
-    artistName: track.artists.map((a) => a.name).join(", "),
-    albumId: track.album.id,
-    albumName: track.album.name,
-    imageUrl: track.album.images[0]?.url ?? "",
-    rank: idx + 1,
-    score: 51 - (idx + 1),
-  }));
-
-  const artists: ArtistStat[] = artistsRes.items.map((artist, idx) => ({
-    id: artist.id,
-    name: artist.name,
-    imageUrl: artist.images[0]?.url ?? "",
-    rank: idx + 1,
-    score: 51 - (idx + 1),
-  }));
-
-  const genreMap = new Map<string, { name: string; score: number; bestRank: number }>();
-  for (const [idx, artist] of artistsRes.items.entries()) {
-    const artistRank = idx + 1;
-    const artistScore = 51 - artistRank;
-    for (const genre of artist.genres) {
-      const id = genre.toLowerCase().replace(/\s+/g, "-");
-      const existing = genreMap.get(id);
-      if (!existing) {
-        genreMap.set(id, { name: genre, score: artistScore, bestRank: artistRank });
-        continue;
-      }
-
-      existing.score += artistScore;
-      if (artistRank < existing.bestRank) {
-        existing.bestRank = artistRank;
-      }
-    }
-  }
-
-  const genres = Array.from(genreMap.entries())
-    .map(([id, value]) => ({
-      id,
-      name: value.name,
-      rank: value.bestRank,
-      score: value.score,
-    }))
-    .sort((a, b) => b.score - a.score || a.rank - b.rank)
-    .map((genre, idx) => ({ ...genre, rank: idx + 1 }));
-
-  const albumMap = new Map<string, AlbumStat>();
-  for (const track of tracks) {
-    const existing = albumMap.get(track.albumId);
-    if (!existing) {
-      albumMap.set(track.albumId, {
-        id: track.albumId,
-        name: track.albumName,
-        artistName: track.artistName,
-        imageUrl: track.imageUrl,
-        rank: track.rank,
-        score: track.score,
-      });
-      continue;
-    }
-
-    if (track.rank < existing.rank) {
-      existing.rank = track.rank;
-    }
-    existing.score += track.score;
-  }
-
-  const albums = Array.from(albumMap.values())
-    .sort((a, b) => b.score - a.score)
-    .map((album, idx) => ({ ...album, rank: idx + 1 }));
-
-  return {
-    capturedAt: new Date().toISOString(),
-    tracks,
-    artists,
-    albums,
-    genres,
-  };
-}
 
 export async function fetchCurrentlyPlaying(accessToken: string): Promise<CurrentlyPlaying | null> {
   const response = await fetch(`${SPOTIFY_API_BASE}/me/player/currently-playing`, {

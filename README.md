@@ -1,45 +1,26 @@
 # Spotify Tracker
 
-A private Spotify tracking app that stores synced/imported Spotify data over time and gives you dedicated views for songs, albums, and artists.
+A private Spotify analytics app that works from exported Spotify Streaming History JSON files.
 
 ## Features
 
-- Spotify OAuth connect/disconnect
-- Manual sync to your top songs/artists (albums derived from tracks)
-- Genre tracking derived from your top artists
-- Estimated listening hours by songs, albums, artists, and genres
-- Advanced dashboard visuals (pie and timeline charts)
-- Theme settings page with presets (dark, light, nord, matrix, sunset)
-- Display unit setting (hours or minutes)
-- JSON Spotify-data import in Settings (merge or replace)
-- Persistent history in `data/snapshots.json`
-- Home dashboard with overview stats
-- Dedicated pages:
+- Import Spotify streaming history JSON (merge or replace)
+- Time-range filters: Today, This week, This month, This year, All time, Custom range
+- Dashboard cards and charts (pie + timeline)
+- Drill-down pages for:
   - `/songs`
   - `/albums`
   - `/artists`
   - `/genres`
-  - `/settings/theme`
+- Detail pages per item with trends and related tracks
+- Theme settings with presets (dark, light, nord, matrix, sunset)
+- Display unit toggle (hours or minutes)
 
-## Time Filters
+## Data Model
 
-Dashboard and drill-down pages support:
-- Day
-- Week
-- Month
-- Year
-- All time
-- Custom date range
-
-Listening hours are estimated from ranking scores over time windows.
-You can tune the baseline with `ESTIMATED_LISTENING_HOURS_PER_DAY` (default `2`).
-
-## Tech stack
-
-- Next.js (App Router, TypeScript)
-- Tailwind CSS
-- Recharts
-- File-based local storage (JSON)
+- Source: Spotify Extended Streaming History style records (`ts`, `ms_played`, track/artist/album metadata)
+- Stored locally in `data/history.json`
+- No snapshot sync model required
 
 ## Setup
 
@@ -55,68 +36,30 @@ npm install
 cp .env.example .env.local
 ```
 
-3. Create a Spotify app at https://developer.spotify.com/dashboard and set redirect URI:
-
-```text
-http://localhost:3000/api/auth/callback
-```
-
-4. Fill `.env.local` with Spotify client credentials.
-
-5. Run:
+3. Run:
 
 ```bash
 npm run dev
 ```
 
-6. Open `http://localhost:3000` and click **Connect Spotify**.
+4. Open `http://localhost:3000`
+5. Go to `Settings` and import your Spotify JSON history file.
 
 ## Docker Deploy
 
-1. Copy env template and set values:
+1. Copy env template:
 
 ```bash
 cp .env.example .env
 ```
 
-2. For local Docker, keep:
-
-```text
-SPOTIFY_REDIRECT_URI=http://localhost:3000/api/auth/callback
-APP_BASE_URL=http://localhost:3000
-```
-
-3. For a real deployment URL, set:
-
-```text
-SPOTIFY_REDIRECT_URI=https://your-domain.com/api/auth/callback
-APP_BASE_URL=https://your-domain.com
-```
-
-4. Add the same callback URL in your Spotify app settings.
-
-5. Build and run:
+2. Build and run:
 
 ```bash
 docker compose up -d --build
 ```
 
-6. Open `http://localhost:3000`.
+3. Open `http://localhost:3000`
+4. Import your Spotify JSON file in Settings.
 
-Data is persisted via a Docker named volume (`spotify_tracker_data`), so snapshots survive container restarts without host file permission issues.
-
-If you previously used `./data:/app/data`, migrate once before restarting:
-
-```bash
-docker compose cp spotify-tracker:/app/data/snapshots.json ./snapshots.json.backup
-```
-
-### Cloudflare Tunnel Note
-
-If you run behind Cloudflare Tunnel or another reverse proxy, set `APP_BASE_URL` to your public HTTPS domain.
-This prevents redirects from using internal bind addresses like `0.0.0.0`.
-
-## Notes
-
-- This is a single-user MVP. Refresh token is stored as an HTTP-only cookie.
-- For true long-term production usage, move snapshots to a database and add scheduled syncing.
+Data is persisted in the named Docker volume `spotify_tracker_data`.

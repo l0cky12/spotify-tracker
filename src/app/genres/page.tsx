@@ -5,7 +5,7 @@ import { RangeFilter } from "@/components/RangeFilter";
 import { TrendChart } from "@/components/TrendChart";
 import { DISPLAY_UNIT_COOKIE, formatEstimatedDuration, parseDisplayUnit } from "@/lib/display-unit";
 import { buildCollectionStats } from "@/lib/stats";
-import { readSnapshots } from "@/lib/storage";
+import { readHistoryEntries } from "@/lib/storage";
 import { resolveTimeRange } from "@/lib/time-range";
 
 export const dynamic = "force-dynamic";
@@ -33,27 +33,15 @@ export default async function GenresPage({ searchParams }: PageProps) {
   if (range.to) query.set("to", range.to);
   const rangeQuery = query.toString();
 
-  const snapshots = await readSnapshots();
-  const genres = buildCollectionStats(
-    snapshots,
-    (s) => s.genres ?? [],
-    (i) => i.id,
-    (i) => i.name,
-    () => "",
-    () => undefined,
-    (i) => i.rank,
-    (i) => i.score,
-    { range },
-  ).slice(0, 30);
+  const entries = await readHistoryEntries();
+  const genres = buildCollectionStats(entries, "genres", range).slice(0, 30);
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 pt-20 md:px-8 lg:pl-72 lg:pt-8">
       <h1 className="mb-4 text-3xl font-bold">Genres</h1>
       <Nav />
       <RangeFilter selectedRange={range.preset} from={range.from} to={range.to} />
-      <p className="mt-3 text-xs uppercase tracking-wide text-[var(--muted)]">
-        Range: {range.label}
-      </p>
+      <p className="mt-3 text-xs uppercase tracking-wide text-[var(--muted)]">Range: {range.label}</p>
       <div className="mt-6 space-y-4">
         {genres.length ? (
           genres.map((genre) => (
@@ -70,7 +58,7 @@ export default async function GenresPage({ searchParams }: PageProps) {
                     #{genre.currentRank} {genre.name}
                   </Link>
                   <p className="text-xs text-[var(--muted)]">
-                    Estimated listened: {formatEstimatedDuration(genre.totalHours, displayUnit)} • Appearances: {genre.appearances} • Avg score: {genre.avgScore}
+                    Listened: {formatEstimatedDuration(genre.totalHours, displayUnit)} • Plays: {genre.playCount} • Avg length: {genre.avgMinutes.toFixed(1)}m
                   </p>
                 </div>
                 <div className="w-full md:w-72">
@@ -81,7 +69,7 @@ export default async function GenresPage({ searchParams }: PageProps) {
           ))
         ) : (
           <article className="rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-4 text-sm text-[var(--muted)]">
-            No genre data yet. Run Sync now to capture your top artist genres.
+            No genre data inferred from this history range.
           </article>
         )}
       </div>

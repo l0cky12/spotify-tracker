@@ -96,22 +96,9 @@ export function Nav() {
           >
             Settings
           </Link>
-          <form action="/api/sync" method="post">
-            <button
-              type="submit"
-              className="w-full rounded-lg bg-[var(--accent)] px-3 py-2 text-sm font-semibold text-[var(--accent-ink)] hover:brightness-110"
-            >
-              Sync now
-            </button>
-          </form>
-          <form action="/api/auth/logout" method="post">
-            <button
-              type="submit"
-              className="w-full rounded-lg border border-[var(--stroke)] px-3 py-2 text-sm font-medium text-[var(--text)] hover:bg-white/10"
-            >
-              Disconnect
-            </button>
-          </form>
+          <p className="rounded-lg border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-center text-xs text-[var(--muted)]">
+            Import Spotify JSON from Settings
+          </p>
         </div>
       </nav>
     </>

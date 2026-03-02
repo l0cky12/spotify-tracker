@@ -6,7 +6,7 @@ import { TrendChart } from "@/components/TrendChart";
 import { buildArtistRelatedTracks } from "@/lib/detail-stats";
 import { DISPLAY_UNIT_COOKIE, formatEstimatedDuration, parseDisplayUnit } from "@/lib/display-unit";
 import { buildCollectionStats } from "@/lib/stats";
-import { readSnapshots } from "@/lib/storage";
+import { readHistoryEntries } from "@/lib/storage";
 import { resolveTimeRange } from "@/lib/time-range";
 
 export const dynamic = "force-dynamic";
@@ -38,23 +38,11 @@ export default async function ArtistDetailPage({ params, searchParams }: PagePro
   if (range.to) query.set("to", range.to);
   const rangeQuery = query.toString();
 
-  const snapshots = await readSnapshots();
-  const artists = buildCollectionStats(
-    snapshots,
-    (s) => s.artists,
-    (i) => i.id,
-    (i) => i.name,
-    (i) => i.imageUrl,
-    () => undefined,
-    (i) => i.rank,
-    (i) => i.score,
-    { range },
-  );
+  const entries = await readHistoryEntries();
+  const artists = buildCollectionStats(entries, "artists", range);
 
   const artist = artists.find((entry) => entry.id === artistId);
-  const relatedTracks = artist
-    ? buildArtistRelatedTracks(snapshots, range, artistId, artist.name)
-    : [];
+  const relatedTracks = artist ? buildArtistRelatedTracks(entries, range, artistId) : [];
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 pt-20 md:px-8 lg:pl-72 lg:pt-8">
@@ -75,26 +63,20 @@ export default async function ArtistDetailPage({ params, searchParams }: PagePro
       ) : (
         <>
           <article className="mt-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center">
-              <img src={artist.imageUrl} alt={artist.name} className="h-20 w-20 object-cover" />
-              <div>
-                <p className="text-2xl font-semibold">{artist.name}</p>
-              </div>
-            </div>
+            <p className="text-2xl font-semibold">{artist.name}</p>
             <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-              <Stat label="Estimated listened" value={formatEstimatedDuration(artist.totalHours, displayUnit)} />
-              <Stat label="Appearances" value={String(artist.appearances)} />
-              <Stat label="Average score" value={artist.avgScore.toFixed(2)} />
+              <Stat label="Listened" value={formatEstimatedDuration(artist.totalHours, displayUnit)} />
+              <Stat label="Play count" value={String(artist.playCount)} />
+              <Stat label="Avg play length" value={`${artist.avgMinutes.toFixed(1)}m`} />
             </div>
             <div className="mt-4">
-              <p className="mb-2 text-xs uppercase tracking-wide text-[var(--muted)]">Rank trend</p>
+              <p className="mb-2 text-xs uppercase tracking-wide text-[var(--muted)]">Listening trend</p>
               <TrendChart points={artist.trend} />
             </div>
           </article>
 
           <section className="mt-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
-            <h2 className="text-lg font-semibold">Likely tracks for this artist</h2>
-            <p className="mt-1 text-sm text-[var(--muted)]">Estimated contribution from tracked songs matching this artist name.</p>
+            <h2 className="text-lg font-semibold">Top tracks from this artist</h2>
             <div className="mt-4 space-y-2">
               {relatedTracks.slice(0, 30).map((track) => (
                 <div key={track.id} className="flex items-center justify-between rounded-lg bg-[var(--panel-soft)] px-3 py-2 text-sm">
