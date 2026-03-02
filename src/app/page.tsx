@@ -2,6 +2,14 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { DashboardVisuals } from "@/components/DashboardVisuals";
 import { Nav } from "@/components/Nav";
+import {
+  convertHoursForDisplay,
+  DISPLAY_UNIT_COOKIE,
+  displayUnitLabel,
+  displayUnitSuffix,
+  formatEstimatedDuration,
+  parseDisplayUnit,
+} from "@/lib/display-unit";
 import { RangeFilter } from "@/components/RangeFilter";
 import { buildCollectionStats, snapshotsInRange } from "@/lib/stats";
 import { readSnapshots } from "@/lib/storage";
@@ -28,6 +36,10 @@ export default async function Home({ searchParams }: PageProps) {
 
   const cookieStore = await cookies();
   const connected = cookieStore.has("spotify_refresh_token");
+  const displayUnit = parseDisplayUnit(cookieStore.get(DISPLAY_UNIT_COOKIE)?.value);
+  const unitLabel = displayUnitLabel(displayUnit);
+  const unitSuffix = displayUnitSuffix(displayUnit);
+  const toDisplay = (hours: number) => convertHoursForDisplay(hours, displayUnit);
 
   const snapshots = await readSnapshots();
   const filteredSnapshots = snapshotsInRange(snapshots, range);
@@ -90,19 +102,19 @@ export default async function Home({ searchParams }: PageProps) {
     const estimatedHours = intervalHours * (safeHoursPerDay / 24);
     return {
       date: startAt.toISOString().slice(5, 10),
-      hours: Number(estimatedHours.toFixed(2)),
+      value: Number(toDisplay(estimatedHours).toFixed(2)),
     };
   });
   const domainSlices = [
-    { name: "Songs", value: songStats.reduce((sum, item) => sum + item.totalHours, 0) },
-    { name: "Albums", value: albumStats.reduce((sum, item) => sum + item.totalHours, 0) },
-    { name: "Artists", value: artistStats.reduce((sum, item) => sum + item.totalHours, 0) },
-    { name: "Genres", value: genreStats.reduce((sum, item) => sum + item.totalHours, 0) },
+    { name: "Songs", value: toDisplay(songStats.reduce((sum, item) => sum + item.totalHours, 0)) },
+    { name: "Albums", value: toDisplay(albumStats.reduce((sum, item) => sum + item.totalHours, 0)) },
+    { name: "Artists", value: toDisplay(artistStats.reduce((sum, item) => sum + item.totalHours, 0)) },
+    { name: "Genres", value: toDisplay(genreStats.reduce((sum, item) => sum + item.totalHours, 0)) },
   ];
-  const genreSlices = genreStats.slice(0, 6).map((item) => ({ name: item.name, value: item.totalHours }));
+  const genreSlices = genreStats.slice(0, 6).map((item) => ({ name: item.name, value: toDisplay(item.totalHours) }));
   const bubbles = songStats.slice(0, 18).map((item) => ({
     name: item.name,
-    hours: item.totalHours,
+    value: toDisplay(item.totalHours),
     appearances: item.appearances,
     score: item.avgScore,
     bubble: Math.max(20, Math.round(item.totalHours * 14)),
@@ -160,46 +172,56 @@ export default async function Home({ searchParams }: PageProps) {
           <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-5">
             <StatCard label="Snapshots" value={String(filteredSnapshots.length)} />
             <StatCard
-              label="Songs (hours)"
-              value={`${songStats.reduce((sum, item) => sum + item.totalHours, 0).toFixed(1)}h`}
+              label={`Songs (${unitLabel})`}
+              value={formatEstimatedDuration(songStats.reduce((sum, item) => sum + item.totalHours, 0), displayUnit, {
+                hoursDecimals: 1,
+              })}
             />
             <StatCard
-              label="Albums (hours)"
-              value={`${albumStats.reduce((sum, item) => sum + item.totalHours, 0).toFixed(1)}h`}
+              label={`Albums (${unitLabel})`}
+              value={formatEstimatedDuration(albumStats.reduce((sum, item) => sum + item.totalHours, 0), displayUnit, {
+                hoursDecimals: 1,
+              })}
             />
             <StatCard
-              label="Artists (hours)"
-              value={`${artistStats.reduce((sum, item) => sum + item.totalHours, 0).toFixed(1)}h`}
+              label={`Artists (${unitLabel})`}
+              value={formatEstimatedDuration(artistStats.reduce((sum, item) => sum + item.totalHours, 0), displayUnit, {
+                hoursDecimals: 1,
+              })}
             />
             <StatCard
-              label="Genres (hours)"
-              value={`${genreStats.reduce((sum, item) => sum + item.totalHours, 0).toFixed(1)}h`}
+              label={`Genres (${unitLabel})`}
+              value={formatEstimatedDuration(genreStats.reduce((sum, item) => sum + item.totalHours, 0), displayUnit, {
+                hoursDecimals: 1,
+              })}
             />
           </section>
 
           <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
             <TopCard
-              title="Top Song (hours)"
+              title={`Top Song (${unitLabel})`}
               primary={songStats[0]?.name ?? "No data"}
-              secondary={songStats[0] ? `${songStats[0].totalHours.toFixed(2)}h` : "Run Sync now"}
+              secondary={songStats[0] ? formatEstimatedDuration(songStats[0].totalHours, displayUnit) : "Run Sync now"}
             />
             <TopCard
-              title="Top Album (hours)"
+              title={`Top Album (${unitLabel})`}
               primary={albumStats[0]?.name ?? "No data"}
-              secondary={albumStats[0] ? `${albumStats[0].totalHours.toFixed(2)}h` : "Run Sync now"}
+              secondary={albumStats[0] ? formatEstimatedDuration(albumStats[0].totalHours, displayUnit) : "Run Sync now"}
             />
             <TopCard
-              title="Top Artist (hours)"
+              title={`Top Artist (${unitLabel})`}
               primary={artistStats[0]?.name ?? "No data"}
-              secondary={artistStats[0] ? `${artistStats[0].totalHours.toFixed(2)}h` : "Run Sync now"}
+              secondary={artistStats[0] ? formatEstimatedDuration(artistStats[0].totalHours, displayUnit) : "Run Sync now"}
             />
             <TopCard
-              title="Top Genre (hours)"
+              title={`Top Genre (${unitLabel})`}
               primary={genreStats[0]?.name ?? "No data"}
-              secondary={genreStats[0] ? `${genreStats[0].totalHours.toFixed(2)}h` : "Run Sync now"}
+              secondary={genreStats[0] ? formatEstimatedDuration(genreStats[0].totalHours, displayUnit) : "Run Sync now"}
             />
           </section>
           <DashboardVisuals
+            unitLabel={unitLabel}
+            unitSuffix={unitSuffix}
             domainSlices={domainSlices}
             genreSlices={genreSlices}
             bubbles={bubbles}

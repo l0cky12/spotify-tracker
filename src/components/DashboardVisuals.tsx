@@ -16,10 +16,12 @@ import {
 } from "recharts";
 
 type SliceDatum = { name: string; value: number };
-type BubbleDatum = { name: string; hours: number; appearances: number; score: number; bubble: number };
-type TimelineDatum = { date: string; hours: number };
+type BubbleDatum = { name: string; value: number; appearances: number; score: number; bubble: number };
+type TimelineDatum = { date: string; value: number };
 
 type Props = {
+  unitLabel: string;
+  unitSuffix: string;
   domainSlices: SliceDatum[];
   genreSlices: SliceDatum[];
   bubbles: BubbleDatum[];
@@ -27,9 +29,9 @@ type Props = {
 };
 
 const pieColors = ["#fb7185", "#f97316", "#facc15", "#34d399", "#60a5fa", "#a78bfa"];
-const formatHours = (value: unknown) => `${Number(value ?? 0).toFixed(2)}h`;
+const formatValue = (value: unknown, unitSuffix: string) => `${Number(value ?? 0).toFixed(2)}${unitSuffix}`;
 
-export function DashboardVisuals({ domainSlices, genreSlices, bubbles, timeline }: Props) {
+export function DashboardVisuals({ unitLabel, unitSuffix, domainSlices, genreSlices, bubbles, timeline }: Props) {
   const isClient = useSyncExternalStore(
     () => () => undefined,
     () => true,
@@ -52,7 +54,7 @@ export function DashboardVisuals({ domainSlices, genreSlices, bubbles, timeline 
     <section className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
       <article className="rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-4">
         <p className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">Listening Mix</p>
-        <h3 className="mt-2 text-lg font-semibold">Songs vs Albums vs Artists vs Genres</h3>
+        <h3 className="mt-2 text-lg font-semibold">Songs vs Albums vs Artists vs Genres ({unitLabel})</h3>
         <div className="mt-4 h-72 min-w-0">
           <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={240}>
             <PieChart>
@@ -61,7 +63,7 @@ export function DashboardVisuals({ domainSlices, genreSlices, bubbles, timeline 
                   <Cell key={`${entry.name}-${idx}`} fill={pieColors[idx % pieColors.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value) => formatHours(value)} />
+              <Tooltip formatter={(value) => formatValue(value, unitSuffix)} />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -69,7 +71,7 @@ export function DashboardVisuals({ domainSlices, genreSlices, bubbles, timeline 
 
       <article className="rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-4">
         <p className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">Genre Split</p>
-        <h3 className="mt-2 text-lg font-semibold">Top Genres by Estimated Hours</h3>
+        <h3 className="mt-2 text-lg font-semibold">Top Genres by Estimated {unitLabel}</h3>
         <div className="mt-4 h-72 min-w-0">
           <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={240}>
             <PieChart>
@@ -78,7 +80,7 @@ export function DashboardVisuals({ domainSlices, genreSlices, bubbles, timeline 
                   <Cell key={`${entry.name}-${idx}`} fill={pieColors[idx % pieColors.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value) => formatHours(value)} />
+              <Tooltip formatter={(value) => formatValue(value, unitSuffix)} />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -91,12 +93,12 @@ export function DashboardVisuals({ domainSlices, genreSlices, bubbles, timeline 
           <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={240}>
             <ScatterChart margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
               <CartesianGrid stroke="var(--stroke)" strokeDasharray="4 4" />
-              <XAxis type="number" dataKey="hours" name="Hours" tick={{ fill: "var(--muted)" }} />
+              <XAxis type="number" dataKey="value" name={unitLabel} tick={{ fill: "var(--muted)" }} />
               <YAxis type="number" dataKey="score" name="Score" tick={{ fill: "var(--muted)" }} />
               <ZAxis type="number" dataKey="bubble" range={[50, 520]} />
               <Tooltip
                 cursor={{ strokeDasharray: "3 3" }}
-                formatter={(value, key) => (key === "hours" ? formatHours(value) : String(value))}
+                formatter={(value, key) => (key === "value" ? formatValue(value, unitSuffix) : String(value))}
                 labelFormatter={(label, payload) => payload?.[0]?.payload?.name ?? label}
               />
               <Scatter data={bubbles} fill="var(--accent)">
@@ -111,14 +113,14 @@ export function DashboardVisuals({ domainSlices, genreSlices, bubbles, timeline 
 
       <article className="rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-4">
         <p className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">Timeline</p>
-        <h3 className="mt-2 text-lg font-semibold">Estimated Hours by Snapshot Interval</h3>
+        <h3 className="mt-2 text-lg font-semibold">Estimated {unitLabel} by Snapshot Interval</h3>
         <div className="mt-4 h-72 min-w-0">
           <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={240}>
             <ScatterChart margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
               <CartesianGrid stroke="var(--stroke)" strokeDasharray="4 4" />
               <XAxis dataKey="date" name="Date" tick={{ fill: "var(--muted)", fontSize: 11 }} />
-              <YAxis dataKey="hours" name="Hours" tick={{ fill: "var(--muted)" }} />
-              <Tooltip formatter={(value) => formatHours(value)} />
+              <YAxis dataKey="value" name={unitLabel} tick={{ fill: "var(--muted)" }} />
+              <Tooltip formatter={(value) => formatValue(value, unitSuffix)} />
               <Scatter data={timeline} fill="var(--accent)" />
             </ScatterChart>
           </ResponsiveContainer>

@@ -1,6 +1,8 @@
+import { cookies } from "next/headers";
 import { Nav } from "@/components/Nav";
 import { RangeFilter } from "@/components/RangeFilter";
 import { TrendChart } from "@/components/TrendChart";
+import { DISPLAY_UNIT_COOKIE, formatEstimatedDuration, parseDisplayUnit } from "@/lib/display-unit";
 import { buildCollectionStats } from "@/lib/stats";
 import { readSnapshots } from "@/lib/storage";
 import { resolveTimeRange } from "@/lib/time-range";
@@ -16,6 +18,8 @@ function firstParam(value: string | string[] | undefined): string | undefined {
 }
 
 export default async function AlbumsPage({ searchParams }: PageProps) {
+  const cookieStore = await cookies();
+  const displayUnit = parseDisplayUnit(cookieStore.get(DISPLAY_UNIT_COOKIE)?.value);
   const params = (await searchParams) ?? {};
   const range = resolveTimeRange({
     range: firstParam(params.range),
@@ -52,11 +56,11 @@ export default async function AlbumsPage({ searchParams }: PageProps) {
                 <img src={album.imageUrl} alt={album.name} className="h-16 w-16 object-cover" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-lg font-semibold">#{album.currentRank} {album.name}</p>
-                  <p className="text-sm text-[var(--muted)]">{album.subtitle}</p>
-                  <p className="text-xs text-[var(--muted)]">
-                    Estimated listened: {album.totalHours.toFixed(2)}h • Appearances: {album.appearances} • Avg score: {album.avgScore}
-                  </p>
-                </div>
+                <p className="text-sm text-[var(--muted)]">{album.subtitle}</p>
+                <p className="text-xs text-[var(--muted)]">
+                    Estimated listened: {formatEstimatedDuration(album.totalHours, displayUnit)} • Appearances: {album.appearances} • Avg score: {album.avgScore}
+                </p>
+              </div>
                 <div className="w-full md:w-72">
                   <TrendChart points={album.trend} />
                 </div>
