@@ -6,7 +6,20 @@ import { DISPLAY_UNIT_COOKIE, parseDisplayUnit } from "@/lib/display-unit";
 
 export const dynamic = "force-dynamic";
 
-export default async function ThemeSettingsPage() {
+type PageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+function firstParam(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function ThemeSettingsPage({ searchParams }: PageProps) {
+  const params = (await searchParams) ?? {};
+  const importState = firstParam(params.import);
+  const importCount = firstParam(params.count);
+  const importMode = firstParam(params.mode);
+  const importReason = firstParam(params.reason);
   const cookieStore = await cookies();
   const displayUnit = parseDisplayUnit(cookieStore.get(DISPLAY_UNIT_COOKIE)?.value);
   return (
@@ -50,6 +63,53 @@ export default async function ThemeSettingsPage() {
           >
             <p className="font-semibold">Minutes</p>
             <p className="text-sm text-[var(--muted)]">Show values like 195m</p>
+          </button>
+        </form>
+      </section>
+
+      <section className="mt-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
+        <h2 className="text-lg font-semibold">Import Snapshot JSON</h2>
+        <p className="mt-1 text-sm text-[var(--muted)]">
+          Upload a JSON export to merge into existing data or replace all stored snapshots.
+        </p>
+        {importState === "ok" ? (
+          <p className="mt-3 rounded-lg border border-emerald-500/50 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
+            Import complete: {importCount ?? "0"} snapshots ({importMode ?? "merge"} mode).
+          </p>
+        ) : null}
+        {importState === "failed" ? (
+          <p className="mt-3 rounded-lg border border-rose-500/50 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+            Import failed{importReason ? `: ${decodeURIComponent(importReason)}` : "."}
+          </p>
+        ) : null}
+        <form action="/api/settings/import-data" method="post" encType="multipart/form-data" className="mt-4 space-y-3">
+          <input type="hidden" name="redirectTo" value="/settings/theme" />
+          <label className="block text-sm">
+            <span className="mb-1 block text-[var(--muted)]">JSON file</span>
+            <input
+              type="file"
+              name="snapshotFile"
+              accept=".json,application/json"
+              required
+              className="w-full rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm"
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block text-[var(--muted)]">Import mode</span>
+            <select
+              name="mode"
+              defaultValue="merge"
+              className="w-full rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm"
+            >
+              <option value="merge">Merge with existing snapshots</option>
+              <option value="replace">Replace all existing snapshots</option>
+            </select>
+          </label>
+          <button
+            type="submit"
+            className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-ink)] hover:brightness-110"
+          >
+            Import JSON
           </button>
         </form>
       </section>

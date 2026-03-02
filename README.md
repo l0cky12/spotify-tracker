@@ -8,9 +8,10 @@ A private Spotify tracking app that stores snapshots over time and gives you ded
 - Manual sync to snapshot top songs/artists (albums derived from tracks)
 - Genre tracking derived from your top artists
 - Estimated listening hours by songs, albums, artists, and genres
-- Advanced dashboard visuals (pie, bubble, and timeline charts)
+- Advanced dashboard visuals (pie and timeline charts)
 - Theme settings page with presets (dark, light, nord, matrix, sunset)
 - Display unit setting (hours or minutes)
+- JSON snapshot import in Settings (merge or replace)
 - Persistent history in `data/snapshots.json`
 - Home dashboard with overview stats
 - Dedicated pages:

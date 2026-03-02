@@ -63,16 +63,15 @@ export default async function GenresPage({ searchParams }: PageProps) {
                   #
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-lg font-semibold">#{genre.currentRank} {genre.name}</p>
+                  <Link
+                    href={`/genres/${encodeURIComponent(genre.id)}?${rangeQuery}`}
+                    className="truncate text-lg font-semibold hover:text-[var(--accent)] hover:underline"
+                  >
+                    #{genre.currentRank} {genre.name}
+                  </Link>
                   <p className="text-xs text-[var(--muted)]">
                     Estimated listened: {formatEstimatedDuration(genre.totalHours, displayUnit)} • Appearances: {genre.appearances} • Avg score: {genre.avgScore}
                   </p>
-                  <Link
-                    href={`/genres/${encodeURIComponent(genre.id)}?${rangeQuery}`}
-                    className="mt-2 inline-flex text-xs font-semibold text-[var(--accent)] hover:underline"
-                  >
-                    View genre stats
-                  </Link>
                 </div>
                 <div className="w-full md:w-72">
                   <TrendChart points={genre.trend} />

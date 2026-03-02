@@ -61,18 +61,17 @@ export default async function AlbumsPage({ searchParams }: PageProps) {
               <div className="flex flex-col gap-4 md:flex-row md:items-center">
                 <img src={album.imageUrl} alt={album.name} className="h-16 w-16 object-cover" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-lg font-semibold">#{album.currentRank} {album.name}</p>
-                <p className="text-sm text-[var(--muted)]">{album.subtitle}</p>
-                <p className="text-xs text-[var(--muted)]">
+                  <Link
+                    href={`/albums/${encodeURIComponent(album.id)}?${rangeQuery}`}
+                    className="truncate text-lg font-semibold hover:text-[var(--accent)] hover:underline"
+                  >
+                    #{album.currentRank} {album.name}
+                  </Link>
+                  <p className="text-sm text-[var(--muted)]">{album.subtitle}</p>
+                  <p className="text-xs text-[var(--muted)]">
                     Estimated listened: {formatEstimatedDuration(album.totalHours, displayUnit)} • Appearances: {album.appearances} • Avg score: {album.avgScore}
-                </p>
-                <Link
-                  href={`/albums/${encodeURIComponent(album.id)}?${rangeQuery}`}
-                  className="mt-2 inline-flex text-xs font-semibold text-[var(--accent)] hover:underline"
-                >
-                  View album stats
-                </Link>
-              </div>
+                  </p>
+                </div>
                 <div className="w-full md:w-72">
                   <TrendChart points={album.trend} />
                 </div>

@@ -61,16 +61,15 @@ export default async function ArtistsPage({ searchParams }: PageProps) {
               <div className="flex flex-col gap-4 md:flex-row md:items-center">
                 <img src={artist.imageUrl} alt={artist.name} className="h-16 w-16 object-cover" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-lg font-semibold">#{artist.currentRank} {artist.name}</p>
+                  <Link
+                    href={`/artists/${encodeURIComponent(artist.id)}?${rangeQuery}`}
+                    className="truncate text-lg font-semibold hover:text-[var(--accent)] hover:underline"
+                  >
+                    #{artist.currentRank} {artist.name}
+                  </Link>
                   <p className="text-xs text-[var(--muted)]">
                     Estimated listened: {formatEstimatedDuration(artist.totalHours, displayUnit)} • Appearances: {artist.appearances} • Avg score: {artist.avgScore}
                   </p>
-                  <Link
-                    href={`/artists/${encodeURIComponent(artist.id)}?${rangeQuery}`}
-                    className="mt-2 inline-flex text-xs font-semibold text-[var(--accent)] hover:underline"
-                  >
-                    View artist stats
-                  </Link>
                 </div>
                 <div className="w-full md:w-72">
                   <TrendChart points={artist.trend} />

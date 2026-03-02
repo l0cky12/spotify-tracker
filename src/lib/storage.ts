@@ -21,8 +21,14 @@ export async function readSnapshots(): Promise<Snapshot[]> {
   return parsed.sort((a, b) => a.capturedAt.localeCompare(b.capturedAt));
 }
 
+export async function writeSnapshots(snapshots: Snapshot[]): Promise<void> {
+  await ensureStore();
+  const sorted = [...snapshots].sort((a, b) => a.capturedAt.localeCompare(b.capturedAt));
+  await fs.writeFile(snapshotFile, JSON.stringify(sorted, null, 2), "utf-8");
+}
+
 export async function appendSnapshot(snapshot: Snapshot): Promise<void> {
   const snapshots = await readSnapshots();
   snapshots.push(snapshot);
-  await fs.writeFile(snapshotFile, JSON.stringify(snapshots, null, 2), "utf-8");
+  await writeSnapshots(snapshots);
 }

@@ -61,17 +61,16 @@ export default async function SongsPage({ searchParams }: PageProps) {
               <div className="flex flex-col gap-4 md:flex-row md:items-center">
                 <img src={song.imageUrl} alt={song.name} className="h-16 w-16 object-cover" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-lg font-semibold">#{song.currentRank} {song.name}</p>
-                <p className="text-sm text-[var(--muted)]">{song.subtitle}</p>
-                <p className="text-xs text-[var(--muted)]">
-                    Estimated listened: {formatEstimatedDuration(song.totalHours, displayUnit)} • Appearances: {song.appearances} • Avg score: {song.avgScore}
-                  </p>
                   <Link
                     href={`/songs/${encodeURIComponent(song.id)}?${rangeQuery}`}
-                    className="mt-2 inline-flex text-xs font-semibold text-[var(--accent)] hover:underline"
+                    className="truncate text-lg font-semibold hover:text-[var(--accent)] hover:underline"
                   >
-                    View song stats
+                    #{song.currentRank} {song.name}
                   </Link>
+                  <p className="text-sm text-[var(--muted)]">{song.subtitle}</p>
+                  <p className="text-xs text-[var(--muted)]">
+                    Estimated listened: {formatEstimatedDuration(song.totalHours, displayUnit)} • Appearances: {song.appearances} • Avg score: {song.avgScore}
+                  </p>
                 </div>
                 <div className="w-full md:w-72">
                   <TrendChart points={song.trend} />
