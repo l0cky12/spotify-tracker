@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { RangeFilter } from "@/components/RangeFilter";
 import { TrendChart } from "@/components/TrendChart";
@@ -26,6 +27,11 @@ export default async function GenresPage({ searchParams }: PageProps) {
     from: firstParam(params.from),
     to: firstParam(params.to),
   });
+  const query = new URLSearchParams();
+  query.set("range", range.preset);
+  if (range.from) query.set("from", range.from);
+  if (range.to) query.set("to", range.to);
+  const rangeQuery = query.toString();
 
   const snapshots = await readSnapshots();
   const genres = buildCollectionStats(
@@ -61,6 +67,12 @@ export default async function GenresPage({ searchParams }: PageProps) {
                   <p className="text-xs text-[var(--muted)]">
                     Estimated listened: {formatEstimatedDuration(genre.totalHours, displayUnit)} • Appearances: {genre.appearances} • Avg score: {genre.avgScore}
                   </p>
+                  <Link
+                    href={`/genres/${encodeURIComponent(genre.id)}?${rangeQuery}`}
+                    className="mt-2 inline-flex text-xs font-semibold text-[var(--accent)] hover:underline"
+                  >
+                    View genre stats
+                  </Link>
                 </div>
                 <div className="w-full md:w-72">
                   <TrendChart points={genre.trend} />

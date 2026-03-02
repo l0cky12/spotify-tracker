@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { RangeFilter } from "@/components/RangeFilter";
 import { TrendChart } from "@/components/TrendChart";
@@ -26,6 +27,11 @@ export default async function SongsPage({ searchParams }: PageProps) {
     from: firstParam(params.from),
     to: firstParam(params.to),
   });
+  const query = new URLSearchParams();
+  query.set("range", range.preset);
+  if (range.from) query.set("from", range.from);
+  if (range.to) query.set("to", range.to);
+  const rangeQuery = query.toString();
 
   const snapshots = await readSnapshots();
   const songs = buildCollectionStats(
@@ -58,9 +64,15 @@ export default async function SongsPage({ searchParams }: PageProps) {
                   <p className="truncate text-lg font-semibold">#{song.currentRank} {song.name}</p>
                 <p className="text-sm text-[var(--muted)]">{song.subtitle}</p>
                 <p className="text-xs text-[var(--muted)]">
-                  Estimated listened: {formatEstimatedDuration(song.totalHours, displayUnit)} • Appearances: {song.appearances} • Avg score: {song.avgScore}
-                </p>
-              </div>
+                    Estimated listened: {formatEstimatedDuration(song.totalHours, displayUnit)} • Appearances: {song.appearances} • Avg score: {song.avgScore}
+                  </p>
+                  <Link
+                    href={`/songs/${encodeURIComponent(song.id)}?${rangeQuery}`}
+                    className="mt-2 inline-flex text-xs font-semibold text-[var(--accent)] hover:underline"
+                  >
+                    View song stats
+                  </Link>
+                </div>
                 <div className="w-full md:w-72">
                   <TrendChart points={song.trend} />
                 </div>

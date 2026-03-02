@@ -112,13 +112,6 @@ export default async function Home({ searchParams }: PageProps) {
     { name: "Genres", value: toDisplay(genreStats.reduce((sum, item) => sum + item.totalHours, 0)) },
   ];
   const genreSlices = genreStats.slice(0, 6).map((item) => ({ name: item.name, value: toDisplay(item.totalHours) }));
-  const bubbles = songStats.slice(0, 18).map((item) => ({
-    name: item.name,
-    value: toDisplay(item.totalHours),
-    appearances: item.appearances,
-    score: item.avgScore,
-    bubble: Math.max(20, Math.round(item.totalHours * 14)),
-  }));
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 pt-20 md:px-8 lg:pl-72 lg:pt-8">
@@ -224,7 +217,6 @@ export default async function Home({ searchParams }: PageProps) {
             unitSuffix={unitSuffix}
             domainSlices={domainSlices}
             genreSlices={genreSlices}
-            bubbles={bubbles}
             timeline={timeline}
           />
 
