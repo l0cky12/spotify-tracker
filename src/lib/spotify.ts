@@ -38,7 +38,8 @@ export async function exchangeCodeForRefreshToken(code: string) {
   });
 
   if (!response.ok) {
-    throw new Error(`Spotify code exchange failed: ${response.status}`);
+    const detail = await response.text();
+    throw new Error(`Spotify code exchange failed: ${response.status} ${detail.slice(0, 180)}`);
   }
 
   const json = (await response.json()) as {
@@ -70,7 +71,8 @@ export async function refreshAccessToken(refreshToken: string): Promise<string> 
   });
 
   if (!response.ok) {
-    throw new Error(`Spotify token refresh failed: ${response.status}`);
+    const detail = await response.text();
+    throw new Error(`Spotify token refresh failed: ${response.status} ${detail.slice(0, 180)}`);
   }
 
   const json = (await response.json()) as { access_token: string };
@@ -86,7 +88,8 @@ async function spotifyGet<T>(accessToken: string, endpoint: string): Promise<T> 
   });
 
   if (!response.ok) {
-    throw new Error(`Spotify API request failed: ${response.status} ${endpoint}`);
+    const detail = await response.text();
+    throw new Error(`Spotify API request failed: ${response.status} ${endpoint} ${detail.slice(0, 180)}`);
   }
 
   return (await response.json()) as T;

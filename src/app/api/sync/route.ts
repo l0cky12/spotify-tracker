@@ -20,6 +20,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.redirect(new URL("/?synced=1", appBaseUrl));
   } catch (error) {
     console.error("Spotify sync failed", error);
-    return NextResponse.redirect(new URL("/?error=sync-failed", appBaseUrl));
+    const message = error instanceof Error ? error.message : "Unknown sync error";
+    const reconnectNeeded =
+      message.includes("Spotify token refresh failed: 400") || message.toLowerCase().includes("invalid_grant");
+
+    const redirectUrl = new URL("/?error=sync-failed", appBaseUrl);
+    redirectUrl.searchParams.set("reason", message.slice(0, 200));
+
+    const response = NextResponse.redirect(redirectUrl);
+    if (reconnectNeeded) {
+      response.cookies.delete("spotify_refresh_token");
+      redirectUrl.searchParams.set("error", "reconnect");
+      response.headers.set("Location", redirectUrl.toString());
+    }
+    return response;
   }
 }

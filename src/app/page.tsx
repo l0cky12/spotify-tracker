@@ -17,6 +17,9 @@ function firstParam(value: string | string[] | undefined): string | undefined {
 
 export default async function Home({ searchParams }: PageProps) {
   const params = (await searchParams) ?? {};
+  const errorParam = firstParam(params.error);
+  const reasonParam = firstParam(params.reason);
+  const syncedParam = firstParam(params.synced);
   const range = resolveTimeRange({
     range: firstParam(params.range),
     from: firstParam(params.from),
@@ -135,6 +138,18 @@ export default async function Home({ searchParams }: PageProps) {
       ) : (
         <>
           <Nav />
+          {syncedParam === "1" ? (
+            <p className="mt-4 rounded-lg border border-emerald-500/50 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
+              Sync completed.
+            </p>
+          ) : null}
+          {errorParam ? (
+            <p className="mt-4 rounded-lg border border-rose-500/50 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+              {errorParam === "reconnect"
+                ? "Spotify connection expired. Please connect Spotify again."
+                : `Sync failed${reasonParam ? `: ${reasonParam}` : "."}`}
+            </p>
+          ) : null}
           <RangeFilter selectedRange={range.preset} from={range.from} to={range.to} />
           <p className="mt-3 text-xs uppercase tracking-wide text-[var(--muted)]">
             Range: {range.label}
