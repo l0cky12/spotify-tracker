@@ -8,5 +8,8 @@ services:
     env_file:
       - .env
     volumes:
-      - ./data:/app/data
+      - spotify_tracker_data:/app/data
     restart: unless-stopped
+
+volumes:
+  spotify_tracker_data:

@@ -82,7 +82,13 @@ docker compose up -d --build
 
 6. Open `http://localhost:3000`.
 
-Data is persisted via `./data:/app/data`, so snapshots survive container restarts.
+Data is persisted via a Docker named volume (`spotify_tracker_data`), so snapshots survive container restarts without host file permission issues.
+
+If you previously used `./data:/app/data`, migrate once before restarting:
+
+```bash
+docker compose cp spotify-tracker:/app/data/snapshots.json ./snapshots.json.backup
+```
 
 ### Cloudflare Tunnel Note
 
