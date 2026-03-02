@@ -3,7 +3,14 @@ import { cookies } from "next/headers";
 import { Nav } from "@/components/Nav";
 import { ThemePicker } from "@/components/ThemePicker";
 import { DISPLAY_UNIT_COOKIE, parseDisplayUnit } from "@/lib/display-unit";
-import { AUTO_SYNC_INTERVAL_COOKIE, autoSyncLabel, parseAutoSyncInterval } from "@/lib/auto-sync";
+import {
+  AUTO_SYNC_INTERVAL_COOKIE,
+  autoSyncLabel,
+  NOW_PLAYING_REFRESH_COOKIE,
+  nowPlayingRefreshLabel,
+  parseAutoSyncInterval,
+  parseNowPlayingRefreshSeconds,
+} from "@/lib/auto-sync";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +31,7 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
   const cookieStore = await cookies();
   const displayUnit = parseDisplayUnit(cookieStore.get(DISPLAY_UNIT_COOKIE)?.value);
   const autoSyncMinutes = parseAutoSyncInterval(cookieStore.get(AUTO_SYNC_INTERVAL_COOKIE)?.value);
+  const nowPlayingRefreshSeconds = parseNowPlayingRefreshSeconds(cookieStore.get(NOW_PLAYING_REFRESH_COOKIE)?.value);
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 pt-20 md:px-8 lg:pl-72 lg:pt-8">
       <Nav />
@@ -113,6 +121,36 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
               value={option.value}
               className={`rounded-xl border px-4 py-2 text-sm font-medium transition ${
                 autoSyncMinutes === option.value
+                  ? "border-[var(--accent)] bg-[var(--panel-soft)]"
+                  : "border-[var(--stroke)] bg-[var(--panel-soft)]/60 hover:brightness-110"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </form>
+      </section>
+
+      <section className="mt-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
+        <h2 className="text-lg font-semibold">Now Playing Refresh</h2>
+        <p className="mt-1 text-sm text-[var(--muted)]">Controls how often the dashboard refreshes current-track progress.</p>
+        <p className="mt-2 text-sm text-[var(--muted)]">Current: {nowPlayingRefreshLabel(nowPlayingRefreshSeconds)}</p>
+        <form action="/api/settings/now-playing-refresh" method="post" className="mt-4 flex flex-wrap gap-3">
+          <input type="hidden" name="redirectTo" value="/settings/theme" />
+          {[
+            { label: "10 sec", value: 10 },
+            { label: "15 sec", value: 15 },
+            { label: "30 sec", value: 30 },
+            { label: "60 sec", value: 60 },
+            { label: "120 sec", value: 120 },
+          ].map((option) => (
+            <button
+              key={option.value}
+              type="submit"
+              name="nowPlayingRefreshSeconds"
+              value={option.value}
+              className={`rounded-xl border px-4 py-2 text-sm font-medium transition ${
+                nowPlayingRefreshSeconds === option.value
                   ? "border-[var(--accent)] bg-[var(--panel-soft)]"
                   : "border-[var(--stroke)] bg-[var(--panel-soft)]/60 hover:brightness-110"
               }`}

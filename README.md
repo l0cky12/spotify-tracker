@@ -5,9 +5,9 @@ A private Spotify analytics app that works from exported Spotify Streaming Histo
 ## Features
 
 - Import Spotify streaming history JSON (merge or replace)
-- Manual Spotify sync from sidebar/dashboard
+- Manual Spotify sync from sidebar
 - Auto-sync scheduler (configurable in Settings, default every hour)
-- Currently listening card on dashboard
+- Currently listening card with progress bar (auto-refresh configurable in Settings)
 - Time-range filters: Today, This week, This month, This year, All time, Custom range
 - Dashboard cards and charts (pie + timeline)
 - Drill-down pages for:

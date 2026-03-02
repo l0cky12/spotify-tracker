@@ -94,13 +94,6 @@ export function Nav() {
               Sync now
             </button>
           </form>
-          <Link
-            href="/api/auth/login"
-            onClick={() => setOpen(false)}
-            className="block w-full rounded-lg border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-center text-sm font-semibold text-[var(--text)] transition hover:brightness-110"
-          >
-            Connect Spotify
-          </Link>
           <form action="/api/auth/logout" method="post">
             <button
               type="submit"

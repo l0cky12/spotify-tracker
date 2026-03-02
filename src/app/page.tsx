@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { DashboardVisuals } from "@/components/DashboardVisuals";
 import { Nav } from "@/components/Nav";
 import { AutoSync } from "@/components/AutoSync";
+import { NowPlayingCard } from "@/components/NowPlayingCard";
 import {
   convertHoursForDisplay,
   DISPLAY_UNIT_COOKIE,
@@ -15,7 +16,14 @@ import { RangeFilter } from "@/components/RangeFilter";
 import { buildCollectionStats, entriesInRange } from "@/lib/stats";
 import { readHistoryEntries } from "@/lib/storage";
 import { resolveTimeRange } from "@/lib/time-range";
-import { AUTO_SYNC_INTERVAL_COOKIE, autoSyncLabel, parseAutoSyncInterval } from "@/lib/auto-sync";
+import {
+  AUTO_SYNC_INTERVAL_COOKIE,
+  autoSyncLabel,
+  NOW_PLAYING_REFRESH_COOKIE,
+  nowPlayingRefreshLabel,
+  parseAutoSyncInterval,
+  parseNowPlayingRefreshSeconds,
+} from "@/lib/auto-sync";
 import { fetchCurrentlyPlaying, refreshAccessToken } from "@/lib/spotify";
 
 type PageProps = {
@@ -56,11 +64,13 @@ export default async function Home({ searchParams }: PageProps) {
   const cookieStore = await cookies();
   const displayUnit = parseDisplayUnit(cookieStore.get(DISPLAY_UNIT_COOKIE)?.value);
   const autoSyncMinutes = parseAutoSyncInterval(cookieStore.get(AUTO_SYNC_INTERVAL_COOKIE)?.value);
+  const nowPlayingRefreshSeconds = parseNowPlayingRefreshSeconds(cookieStore.get(NOW_PLAYING_REFRESH_COOKIE)?.value);
   const refreshToken = cookieStore.get("spotify_refresh_token")?.value;
   const unitLabel = displayUnitLabel(displayUnit);
   const unitSuffix = displayUnitSuffix(displayUnit);
   const toDisplay = (hours: number) => convertHoursForDisplay(hours, displayUnit);
   const autoSyncText = autoSyncLabel(autoSyncMinutes);
+  const nowPlayingRefreshText = nowPlayingRefreshLabel(nowPlayingRefreshSeconds);
 
   let nowPlaying: Awaited<ReturnType<typeof fetchCurrentlyPlaying>> = null;
   if (refreshToken) {
@@ -102,20 +112,12 @@ export default async function Home({ searchParams }: PageProps) {
       <Nav />
       <AutoSync intervalMinutes={autoSyncMinutes} />
 
-      <header className="mb-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)]/90 p-6 shadow-[0_12px_30px_rgba(0,0,0,0.25)] backdrop-blur-sm">
+      <header className="mb-6 rounded-3xl border border-[var(--stroke)] bg-[linear-gradient(160deg,var(--panel),var(--panel-soft))] p-6 shadow-[0_20px_45px_rgba(0,0,0,0.28)] backdrop-blur-sm">
         <h1 className="text-3xl font-bold text-[var(--text)]">Spotify Tracker</h1>
         <p className="mt-2 text-sm text-[var(--muted)]">
           Import your Spotify JSON history and explore songs, albums, artists, and genres by listening time.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
-          <form action="/api/sync" method="post">
-            <button
-              type="submit"
-              className="rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-4 py-2 text-sm font-semibold hover:brightness-110"
-            >
-              Sync now
-            </button>
-          </form>
           <Link
             href="/settings/theme"
             className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-ink)] hover:brightness-110"
@@ -123,7 +125,7 @@ export default async function Home({ searchParams }: PageProps) {
             Settings
           </Link>
         </div>
-        <p className="mt-3 text-xs text-[var(--muted)]">Auto-sync: {autoSyncText}</p>
+        <p className="mt-3 text-xs text-[var(--muted)]">Auto-sync: {autoSyncText} | Now Playing refresh: {nowPlayingRefreshText}</p>
       </header>
 
       {syncState === "ok" ? (
@@ -142,28 +144,7 @@ export default async function Home({ searchParams }: PageProps) {
         </p>
       ) : null}
 
-      <section className="mt-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
-        <p className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">Now Playing</p>
-        {nowPlaying ? (
-          <div className="mt-3 flex items-center gap-3">
-            {nowPlaying.imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={nowPlaying.imageUrl} alt={nowPlaying.albumName} className="h-14 w-14 rounded-md object-cover" />
-            ) : (
-              <div className="h-14 w-14 rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)]" />
-            )}
-            <div>
-              <p className="text-sm font-semibold">{nowPlaying.trackName}</p>
-              <p className="text-xs text-[var(--muted)]">{nowPlaying.artistName}</p>
-              <p className="text-xs text-[var(--muted)]">
-                {nowPlaying.isPlaying ? "Playing now" : "Not currently playing"}
-              </p>
-            </div>
-          </div>
-        ) : (
-          <p className="mt-2 text-sm text-[var(--muted)]">No active track right now.</p>
-        )}
-      </section>
+      <NowPlayingCard initialNowPlaying={nowPlaying} refreshSeconds={nowPlayingRefreshSeconds} />
 
       <RangeFilter selectedRange={range.preset} from={range.from} to={range.to} />
       <p className="mt-3 text-xs uppercase tracking-wide text-[var(--muted)]">Range: {range.label}</p>
@@ -267,7 +248,7 @@ export default async function Home({ searchParams }: PageProps) {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <article className="rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-4">
+    <article className="rounded-3xl border border-[var(--stroke)] bg-[linear-gradient(150deg,var(--panel),var(--panel-soft))] p-4 shadow-[0_10px_24px_rgba(0,0,0,0.18)]">
       <p className="text-xs uppercase tracking-wide text-[var(--muted)]">{label}</p>
       <p className="mt-2 text-2xl font-bold">{value}</p>
     </article>
@@ -284,7 +265,7 @@ function TopCard({
   secondary: string;
 }) {
   return (
-    <article className="rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-4">
+    <article className="rounded-3xl border border-[var(--stroke)] bg-[linear-gradient(160deg,var(--panel),var(--panel-soft))] p-4 shadow-[0_10px_24px_rgba(0,0,0,0.16)]">
       <p className="text-xs uppercase tracking-wide text-[var(--muted)]">{title}</p>
       <p className="mt-3 text-lg font-semibold">{primary}</p>
       <p className="mt-1 text-sm text-[var(--muted)]">{secondary}</p>
