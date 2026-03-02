@@ -1,15 +1,31 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { Nav } from "@/components/Nav";
-import { buildCollectionStats, latestSnapshot } from "@/lib/stats";
+import { RangeFilter } from "@/components/RangeFilter";
+import { buildCollectionStats } from "@/lib/stats";
 import { readSnapshots } from "@/lib/storage";
+import { resolveTimeRange } from "@/lib/time-range";
 
-export default async function Home() {
+type PageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+function firstParam(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function Home({ searchParams }: PageProps) {
+  const params = (await searchParams) ?? {};
+  const range = resolveTimeRange({
+    range: firstParam(params.range),
+    from: firstParam(params.from),
+    to: firstParam(params.to),
+  });
+
   const cookieStore = await cookies();
   const connected = cookieStore.has("spotify_refresh_token");
 
   const snapshots = await readSnapshots();
-  const latest = latestSnapshot(snapshots);
 
   const songStats = buildCollectionStats(
     snapshots,
@@ -20,6 +36,7 @@ export default async function Home() {
     (i) => i.artistName,
     (i) => i.rank,
     (i) => i.score,
+    { range },
   );
   const albumStats = buildCollectionStats(
     snapshots,
@@ -30,6 +47,7 @@ export default async function Home() {
     (i) => i.artistName,
     (i) => i.rank,
     (i) => i.score,
+    { range },
   );
   const artistStats = buildCollectionStats(
     snapshots,
@@ -40,6 +58,7 @@ export default async function Home() {
     () => undefined,
     (i) => i.rank,
     (i) => i.score,
+    { range },
   );
   const genreStats = buildCollectionStats(
     snapshots,
@@ -50,6 +69,7 @@ export default async function Home() {
     () => undefined,
     (i) => i.rank,
     (i) => i.score,
+    { range },
   );
 
   return (
@@ -76,35 +96,51 @@ export default async function Home() {
       ) : (
         <>
           <Nav />
+          <RangeFilter selectedRange={range.preset} from={range.from} to={range.to} />
+          <p className="mt-3 text-xs uppercase tracking-wide text-[var(--muted)]">
+            Range: {range.label}
+          </p>
 
           <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-5">
             <StatCard label="Snapshots" value={String(snapshots.length)} />
-            <StatCard label="Tracked Songs" value={String(songStats.length)} />
-            <StatCard label="Tracked Albums" value={String(albumStats.length)} />
-            <StatCard label="Tracked Artists" value={String(artistStats.length)} />
-            <StatCard label="Tracked Genres" value={String(genreStats.length)} />
+            <StatCard
+              label="Songs (hours)"
+              value={`${songStats.reduce((sum, item) => sum + item.totalHours, 0).toFixed(1)}h`}
+            />
+            <StatCard
+              label="Albums (hours)"
+              value={`${albumStats.reduce((sum, item) => sum + item.totalHours, 0).toFixed(1)}h`}
+            />
+            <StatCard
+              label="Artists (hours)"
+              value={`${artistStats.reduce((sum, item) => sum + item.totalHours, 0).toFixed(1)}h`}
+            />
+            <StatCard
+              label="Genres (hours)"
+              value={`${genreStats.reduce((sum, item) => sum + item.totalHours, 0).toFixed(1)}h`}
+            />
           </section>
 
           <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
             <TopCard
-              title="Top Song (current)"
-              primary={latest?.tracks[0]?.name ?? "No data"}
-              secondary={latest?.tracks[0]?.artistName ?? "Run Sync now"}
+              title="Top Song (hours)"
+              primary={songStats[0]?.name ?? "No data"}
+              secondary={songStats[0] ? `${songStats[0].totalHours.toFixed(2)}h` : "Run Sync now"}
             />
             <TopCard
-              title="Top Album (current)"
-              primary={latest?.albums[0]?.name ?? "No data"}
-              secondary={latest?.albums[0]?.artistName ?? "Run Sync now"}
+              title="Top Album (hours)"
+              primary={albumStats[0]?.name ?? "No data"}
+              secondary={albumStats[0] ? `${albumStats[0].totalHours.toFixed(2)}h` : "Run Sync now"}
             />
             <TopCard
-              title="Top Artist (current)"
-              primary={latest?.artists[0]?.name ?? "No data"}
-              secondary={snapshots.length ? "From latest snapshot" : "Run Sync now"}
+              title="Top Artist (hours)"
+              primary={artistStats[0]?.name ?? "No data"}
+              secondary={artistStats[0] ? `${artistStats[0].totalHours.toFixed(2)}h` : "Run Sync now"}
             />
             <TopCard
-              title="Top Genre (current)"
-              primary={latest?.genres?.[0]?.name ?? "No data"}
-              secondary={latest?.genres?.length ? "From latest snapshot" : "Run Sync now"}
+              title="Top Genre (hours)"
+              primary={genreStats[0]?.name ?? "No data"}
+              secondary={genreStats[0] ? `${genreStats[0].totalHours.toFixed(2)}h` : "Run Sync now"}
             />
           </section>
 

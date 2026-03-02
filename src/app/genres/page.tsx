@@ -1,11 +1,28 @@
 import { Nav } from "@/components/Nav";
+import { RangeFilter } from "@/components/RangeFilter";
 import { TrendChart } from "@/components/TrendChart";
 import { buildCollectionStats } from "@/lib/stats";
 import { readSnapshots } from "@/lib/storage";
+import { resolveTimeRange } from "@/lib/time-range";
 
 export const dynamic = "force-dynamic";
 
-export default async function GenresPage() {
+type PageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+function firstParam(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function GenresPage({ searchParams }: PageProps) {
+  const params = (await searchParams) ?? {};
+  const range = resolveTimeRange({
+    range: firstParam(params.range),
+    from: firstParam(params.from),
+    to: firstParam(params.to),
+  });
+
   const snapshots = await readSnapshots();
   const genres = buildCollectionStats(
     snapshots,
@@ -16,12 +33,17 @@ export default async function GenresPage() {
     () => undefined,
     (i) => i.rank,
     (i) => i.score,
+    { range },
   ).slice(0, 30);
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 pt-20 md:px-8 lg:pl-72 lg:pt-8">
       <h1 className="mb-4 text-3xl font-bold">Genres</h1>
       <Nav />
+      <RangeFilter selectedRange={range.preset} from={range.from} to={range.to} />
+      <p className="mt-3 text-xs uppercase tracking-wide text-[var(--muted)]">
+        Range: {range.label}
+      </p>
       <div className="mt-6 space-y-4">
         {genres.length ? (
           genres.map((genre) => (
@@ -33,7 +55,7 @@ export default async function GenresPage() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-lg font-semibold">#{genre.currentRank} {genre.name}</p>
                   <p className="text-xs text-[var(--muted)]">
-                    Appearances: {genre.appearances} • Avg score: {genre.avgScore}
+                    Estimated listened: {genre.totalHours.toFixed(2)}h • Appearances: {genre.appearances} • Avg score: {genre.avgScore}
                   </p>
                 </div>
                 <div className="w-full md:w-72">

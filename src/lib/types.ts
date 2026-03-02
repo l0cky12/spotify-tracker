@@ -55,5 +55,6 @@ export type CollectionStats = {
   currentRank: number;
   appearances: number;
   avgScore: number;
+  totalHours: number;
   trend: { capturedAt: string; rank: number; score: number }[];
 };
