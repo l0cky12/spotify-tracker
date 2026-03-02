@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { mergeHistoryEntries } from "@/lib/storage";
 import { HistoryEntry } from "@/lib/types";
+import { enrichHistoryGenres } from "@/lib/genre-enrichment";
 
 function asObject(value: unknown): Record<string, unknown> | null {
   return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : null;
@@ -38,6 +39,7 @@ function normalizeEntry(value: unknown): HistoryEntry | null {
     master_metadata_album_artist_name: asString(obj.master_metadata_album_artist_name),
     master_metadata_album_album_name: asString(obj.master_metadata_album_album_name),
     spotify_track_uri: asString(obj.spotify_track_uri),
+    inferred_genre: asString(obj.inferred_genre),
     reason_start: asString(obj.reason_start),
     reason_end: asString(obj.reason_end),
     shuffle: typeof obj.shuffle === "boolean" ? obj.shuffle : undefined,
@@ -95,10 +97,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.redirect(new URL(`${redirectTo}?import=failed&reason=no-valid-history`, appBaseUrl), 303);
     }
 
-    const totalCount = await mergeHistoryEntries(imported, mode === "replace");
+    const enriched = await enrichHistoryGenres(imported);
+    const totalCount = await mergeHistoryEntries(enriched, mode === "replace");
 
     return NextResponse.redirect(
-      new URL(`${redirectTo}?import=ok&count=${imported.length}&total=${totalCount}&mode=${mode}`, appBaseUrl),
+      new URL(`${redirectTo}?import=ok&count=${enriched.length}&total=${totalCount}&mode=${mode}`, appBaseUrl),
       303,
     );
   } catch (error) {

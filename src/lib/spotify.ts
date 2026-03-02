@@ -16,6 +16,40 @@ function toBasicAuth(clientId: string, clientSecret: string): string {
   return Buffer.from(raw).toString("base64");
 }
 
+async function requestClientCredentialsToken(): Promise<string> {
+  const clientId = requireEnv("SPOTIFY_CLIENT_ID");
+  const clientSecret = requireEnv("SPOTIFY_CLIENT_SECRET");
+
+  const body = new URLSearchParams({
+    grant_type: "client_credentials",
+  });
+
+  const response = await fetch(SPOTIFY_TOKEN_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Authorization: `Basic ${toBasicAuth(clientId, clientSecret)}`,
+    },
+    body: body.toString(),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Spotify client token failed: ${response.status} ${detail.slice(0, 180)}`);
+  }
+
+  const json = (await response.json()) as { access_token: string };
+  return json.access_token;
+}
+
+function normalizeGenreLabel(genre: string): string {
+  return genre
+    .split(" ")
+    .map((part) => (part ? `${part.charAt(0).toUpperCase()}${part.slice(1)}` : part))
+    .join(" ");
+}
+
 export async function exchangeCodeForRefreshToken(code: string) {
   const clientId = requireEnv("SPOTIFY_CLIENT_ID");
   const clientSecret = requireEnv("SPOTIFY_CLIENT_SECRET");
@@ -184,6 +218,39 @@ export async function fetchRecentlyPlayed(accessToken: string, limit = 50): Prom
       skipped: undefined,
     }))
     .filter((entry) => entry.ms_played > 0);
+}
+
+export async function fetchArtistGenresByName(artists: string[]): Promise<Map<string, string>> {
+  const unique = Array.from(new Set(artists.map((artist) => artist.trim()).filter(Boolean)));
+  if (!unique.length) return new Map();
+
+  const accessToken = await requestClientCredentialsToken();
+  const resolved = new Map<string, string>();
+
+  for (const artist of unique) {
+    const query = encodeURIComponent(`artist:${artist}`);
+    const response = await fetch(`${SPOTIFY_API_BASE}/search?q=${query}&type=artist&limit=1`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) continue;
+    const json = (await response.json()) as {
+      artists?: {
+        items?: Array<{
+          genres?: string[];
+        }>;
+      };
+    };
+    const topGenre = json.artists?.items?.[0]?.genres?.[0];
+    if (topGenre) {
+      resolved.set(artist, normalizeGenreLabel(topGenre));
+    }
+  }
+
+  return resolved;
 }
 
 export function buildLoginUrl() {

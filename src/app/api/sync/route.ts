@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.redirect(
-      new URL(`${redirectTo}${joinQuery(redirectTo, `sync=ok&count=${imported.length}`)}`, appBaseUrl),
+      new URL(`${redirectTo}${joinQuery(redirectTo, `sync=ok&syncCount=${imported.length}`)}`, appBaseUrl),
       303,
     );
   } catch (error) {

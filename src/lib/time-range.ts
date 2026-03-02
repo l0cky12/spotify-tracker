@@ -1,4 +1,4 @@
-export type TimePreset = "day" | "week" | "month" | "year" | "all" | "custom";
+export type TimePreset = "day" | "week" | "month" | "year" | "last-year" | "last-3-years" | "last-5-years" | "all" | "custom";
 
 export type TimeRange = {
   preset: TimePreset;
@@ -47,8 +47,14 @@ function startOfYear(date: Date): Date {
   return out;
 }
 
+function shiftYears(date: Date, years: number): Date {
+  const out = startOfDay(date);
+  out.setFullYear(out.getFullYear() - years);
+  return out;
+}
+
 function pickPreset(value?: string): TimePreset {
-  const presets: TimePreset[] = ["day", "week", "month", "year", "all", "custom"];
+  const presets: TimePreset[] = ["day", "week", "month", "year", "last-year", "last-3-years", "last-5-years", "all", "custom"];
   return presets.includes((value ?? "") as TimePreset) ? (value as TimePreset) : "all";
 }
 
@@ -93,13 +99,30 @@ export function resolveTimeRange(params: {
         ? startOfWeek(now)
         : preset === "month"
           ? startOfMonth(now)
-          : startOfYear(now);
+          : preset === "year"
+            ? startOfYear(now)
+            : preset === "last-year"
+              ? shiftYears(now, 1)
+              : preset === "last-3-years"
+                ? shiftYears(now, 3)
+                : shiftYears(now, 5);
 
   return {
     preset,
     start,
     end: now,
-    label:
-      preset === "day" ? "Today" : preset === "week" ? "This week" : preset === "month" ? "This month" : "This year",
+    label: presetLabel(preset),
   };
+}
+
+function presetLabel(preset: TimePreset): string {
+  if (preset === "day") return "Today";
+  if (preset === "week") return "This week";
+  if (preset === "month") return "This month";
+  if (preset === "year") return "This year";
+  if (preset === "last-year") return "Last year";
+  if (preset === "last-3-years") return "Last 3 years";
+  if (preset === "last-5-years") return "Last 5 years";
+  if (preset === "all") return "All time";
+  return "Custom";
 }

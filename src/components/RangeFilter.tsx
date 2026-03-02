@@ -11,6 +11,9 @@ const presets: Array<{ value: TimePreset; label: string }> = [
   { value: "week", label: "This week" },
   { value: "month", label: "This month" },
   { value: "year", label: "This year" },
+  { value: "last-year", label: "Last year" },
+  { value: "last-3-years", label: "Last 3 years" },
+  { value: "last-5-years", label: "Last 5 years" },
   { value: "all", label: "All time" },
   { value: "custom", label: "Custom" },
 ];

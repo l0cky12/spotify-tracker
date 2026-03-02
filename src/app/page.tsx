@@ -43,11 +43,8 @@ function buildTimeline(entries: Awaited<ReturnType<typeof readHistoryEntries>>, 
 
 export default async function Home({ searchParams }: PageProps) {
   const params = (await searchParams) ?? {};
-  const importState = firstParam(params.import);
-  const importCount = firstParam(params.count);
-  const importReason = firstParam(params.reason);
   const syncState = firstParam(params.sync);
-  const syncCount = firstParam(params.count);
+  const syncCount = firstParam(params.syncCount) ?? firstParam(params.count);
   const syncError = firstParam(params.error);
   const syncReason = firstParam(params.reason);
   const range = resolveTimeRange({
@@ -77,6 +74,7 @@ export default async function Home({ searchParams }: PageProps) {
 
   const allEntries = await readHistoryEntries();
   const filteredEntries = entriesInRange(allEntries, range);
+  const analyticsEntries = filteredEntries.filter((entry) => entry.ms_played >= 30_000);
 
   const songStats = buildCollectionStats(allEntries, "songs", range);
   const albumStats = buildCollectionStats(allEntries, "albums", range);
@@ -97,7 +95,7 @@ export default async function Home({ searchParams }: PageProps) {
   ];
 
   const genreSlices = genreStats.slice(0, 6).map((item) => ({ name: item.name, value: toDisplay(item.totalHours) }));
-  const timeline = buildTimeline(filteredEntries, toDisplay);
+  const timeline = buildTimeline(analyticsEntries, toDisplay);
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 pt-20 md:px-8 lg:pl-72 lg:pt-8">
@@ -128,16 +126,6 @@ export default async function Home({ searchParams }: PageProps) {
         <p className="mt-3 text-xs text-[var(--muted)]">Auto-sync: {autoSyncText}</p>
       </header>
 
-      {importState === "ok" ? (
-        <p className="mt-4 rounded-lg border border-emerald-500/50 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
-          Import complete: {importCount ?? "0"} entries added.
-        </p>
-      ) : null}
-      {importState === "failed" ? (
-        <p className="mt-4 rounded-lg border border-rose-500/50 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
-          Import failed{importReason ? `: ${importReason}` : "."}
-        </p>
-      ) : null}
       {syncState === "ok" ? (
         <p className="mt-4 rounded-lg border border-sky-500/50 bg-sky-500/10 px-3 py-2 text-sm text-sky-200">
           Sync completed: {syncCount ?? "0"} recent plays imported.
@@ -180,8 +168,8 @@ export default async function Home({ searchParams }: PageProps) {
       <RangeFilter selectedRange={range.preset} from={range.from} to={range.to} />
       <p className="mt-3 text-xs uppercase tracking-wide text-[var(--muted)]">Range: {range.label}</p>
 
-      <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-5">
-        <StatCard label="Plays" value={String(filteredEntries.length)} />
+      <section className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <StatCard label="Plays" value={String(analyticsEntries.length)} />
         <StatCard
           label={`Songs (${unitLabel})`}
           value={formatEstimatedDuration(songStats.reduce((sum, item) => sum + item.totalHours, 0), displayUnit, {
@@ -208,7 +196,7 @@ export default async function Home({ searchParams }: PageProps) {
         />
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <TopCard
           title={`Top Song (${unitLabel})`}
           primary={songStats[0]?.name ?? "No data"}
@@ -239,9 +227,9 @@ export default async function Home({ searchParams }: PageProps) {
         timeline={timeline}
       />
 
-      <section className="mt-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
+      <section className="mt-8 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
         <h2 className="text-lg font-semibold">Drill down</h2>
-        {!filteredEntries.length && allEntries.length > 0 ? (
+        {!analyticsEntries.length && allEntries.length > 0 ? (
           <p className="mt-2 text-sm text-[var(--muted)]">
             No listening history found in this range. Try widening the date range or selecting All time.
           </p>

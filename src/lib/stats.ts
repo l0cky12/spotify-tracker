@@ -11,6 +11,7 @@ type Aggregated = {
   playCount: number;
   trendByDay: Map<string, number>;
 };
+const MIN_LISTEN_MS = 30_000;
 
 function parseDate(value: string): Date | null {
   const date = new Date(value);
@@ -27,13 +28,16 @@ function normalizeText(value: string | null | undefined, fallback: string): stri
 }
 
 function getGenreName(entry: HistoryEntry): string {
+  const inferred = normalizeText(entry.inferred_genre, "").trim();
+  if (inferred) return inferred;
+
   const album = normalizeText(entry.master_metadata_album_album_name, "Unknown album").toLowerCase();
   const artist = normalizeText(entry.master_metadata_album_artist_name, "Unknown artist").toLowerCase();
 
   if (album.includes("greatest hits") || album.includes("best of")) return "Compilation";
   if (artist.includes("dj") || album.includes("mix") || album.includes("remix")) return "Electronic / Mix";
   if (album.includes("live")) return "Live";
-  return "Unknown";
+  return "Other";
 }
 
 export function entriesInRange(entries: HistoryEntry[], range?: TimeRange): HistoryEntry[] {
@@ -69,7 +73,7 @@ function keyForKind(entry: HistoryEntry, kind: StatsKind): { id: string; name: s
 }
 
 export function buildCollectionStats(entries: HistoryEntry[], kind: StatsKind, range?: TimeRange): CollectionStats[] {
-  const filtered = entriesInRange(entries, range).filter((entry) => entry.ms_played > 0);
+  const filtered = entriesInRange(entries, range).filter((entry) => entry.ms_played >= MIN_LISTEN_MS);
   const map = new Map<string, Aggregated>();
 
   for (const entry of filtered) {

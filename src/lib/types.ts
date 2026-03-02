@@ -5,6 +5,7 @@ export type HistoryEntry = {
   master_metadata_album_artist_name: string | null;
   master_metadata_album_album_name: string | null;
   spotify_track_uri: string | null;
+  inferred_genre?: string | null;
   reason_start?: string | null;
   reason_end?: string | null;
   shuffle?: boolean;
