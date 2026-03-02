@@ -229,6 +229,13 @@ export async function fetchCurrentlyPlaying(accessToken: string): Promise<Curren
 
   if (!response.ok) {
     const detail = await response.text();
+    // Missing playback scopes is common; treat as "no data" instead of hard failure/log spam.
+    if (
+      (response.status === 401 || response.status === 403) &&
+      detail.toLowerCase().includes("permissions missing")
+    ) {
+      return null;
+    }
     throw new Error(`Spotify currently-playing failed: ${response.status} ${detail.slice(0, 180)}`);
   }
 
@@ -268,7 +275,7 @@ export function buildLoginUrl() {
   const params = new URLSearchParams({
     response_type: "code",
     client_id: clientId,
-    scope: "user-top-read",
+    scope: "user-top-read user-read-currently-playing user-read-playback-state",
     redirect_uri: redirectUri,
     show_dialog: "false",
   });

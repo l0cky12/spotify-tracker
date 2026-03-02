@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getAppBaseUrl } from "@/lib/app-url";
 import { readSnapshots, writeSnapshots } from "@/lib/storage";
 import { Snapshot } from "@/lib/types";
 
@@ -123,13 +124,14 @@ function isFileLike(value: unknown): value is { text: () => Promise<string> } {
 
 export async function POST(request: NextRequest) {
   try {
+    const appBaseUrl = getAppBaseUrl(request);
     const formData = await request.formData();
     const file = formData.get("snapshotFile");
     const modeRaw = formData.get("mode");
     const redirectToRaw = formData.get("redirectTo");
 
     if (!isFileLike(file)) {
-      return NextResponse.redirect(new URL("/settings/theme?import=failed&reason=no-file", request.url), 303);
+      return NextResponse.redirect(new URL("/settings/theme?import=failed&reason=no-file", appBaseUrl), 303);
     }
 
     const mode = modeRaw === "replace" ? "replace" : "merge";
@@ -141,12 +143,12 @@ export async function POST(request: NextRequest) {
     try {
       parsed = JSON.parse(text);
     } catch {
-      return NextResponse.redirect(new URL(`${redirectTo}?import=failed&reason=invalid-json`, request.url), 303);
+      return NextResponse.redirect(new URL(`${redirectTo}?import=failed&reason=invalid-json`, appBaseUrl), 303);
     }
 
     const imported = normalizeImportedPayload(parsed);
     if (!imported.length) {
-      return NextResponse.redirect(new URL(`${redirectTo}?import=failed&reason=no-valid-snapshots`, request.url), 303);
+      return NextResponse.redirect(new URL(`${redirectTo}?import=failed&reason=no-valid-snapshots`, appBaseUrl), 303);
     }
 
     const current = await readSnapshots();
@@ -167,12 +169,12 @@ export async function POST(request: NextRequest) {
     await writeSnapshots(deduped);
 
     return NextResponse.redirect(
-      new URL(`${redirectTo}?import=ok&count=${imported.length}&mode=${mode}`, request.url),
+      new URL(`${redirectTo}?import=ok&count=${imported.length}&mode=${mode}`, appBaseUrl),
       303,
     );
   } catch (error) {
     const reason = error instanceof Error ? error.message.slice(0, 120) : "unknown";
     const safeReason = encodeURIComponent(reason);
-    return NextResponse.redirect(new URL(`/settings/theme?import=failed&reason=${safeReason}`, request.url), 303);
+    return NextResponse.redirect(new URL(`/settings/theme?import=failed&reason=${safeReason}`, getAppBaseUrl(request)), 303);
   }
 }

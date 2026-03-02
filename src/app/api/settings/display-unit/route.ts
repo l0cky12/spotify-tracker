@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DISPLAY_UNIT_COOKIE, parseDisplayUnit } from "@/lib/display-unit";
+import { getAppBaseUrl } from "@/lib/app-url";
 
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 
@@ -12,7 +13,7 @@ export async function POST(request: NextRequest) {
   const redirectTo =
     typeof redirectToRaw === "string" && redirectToRaw.startsWith("/") ? redirectToRaw : "/settings/theme";
 
-  const response = NextResponse.redirect(new URL(redirectTo, request.url), 303);
+  const response = NextResponse.redirect(new URL(redirectTo, getAppBaseUrl(request)), 303);
   response.cookies.set(DISPLAY_UNIT_COOKIE, displayUnit, {
     path: "/",
     sameSite: "lax",
