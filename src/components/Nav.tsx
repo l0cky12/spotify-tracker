@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 const links = [
@@ -15,7 +15,18 @@ const links = [
 
 export function Nav() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
+  const preservedParams = new URLSearchParams();
+  const range = searchParams.get("range");
+  const from = searchParams.get("from");
+  const to = searchParams.get("to");
+
+  if (range) preservedParams.set("range", range);
+  if (from) preservedParams.set("from", from);
+  if (to) preservedParams.set("to", to);
+
+  const suffix = preservedParams.toString() ? `?${preservedParams.toString()}` : "";
 
   return (
     <>
@@ -60,7 +71,7 @@ export function Nav() {
             return (
               <Link
                 key={link.href}
-                href={link.href}
+                href={`${link.href}${suffix}`}
                 onClick={() => setOpen(false)}
                 className={`block rounded-lg px-3 py-2 text-sm font-medium transition ${
                   active

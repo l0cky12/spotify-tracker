@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { DashboardVisuals } from "@/components/DashboardVisuals";
 import { Nav } from "@/components/Nav";
 import { RangeFilter } from "@/components/RangeFilter";
-import { buildCollectionStats } from "@/lib/stats";
+import { buildCollectionStats, snapshotsInRange } from "@/lib/stats";
 import { readSnapshots } from "@/lib/storage";
 import { resolveTimeRange } from "@/lib/time-range";
 
@@ -30,7 +30,13 @@ export default async function Home({ searchParams }: PageProps) {
   const connected = cookieStore.has("spotify_refresh_token");
 
   const snapshots = await readSnapshots();
+  const filteredSnapshots = snapshotsInRange(snapshots, range);
   const estimatedHoursPerDay = Number(process.env.ESTIMATED_LISTENING_HOURS_PER_DAY ?? "2");
+  const query = new URLSearchParams();
+  query.set("range", range.preset);
+  if (range.from) query.set("from", range.from);
+  if (range.to) query.set("to", range.to);
+  const rangeQuery = query.toString();
 
   const songStats = buildCollectionStats(
     snapshots,
@@ -77,10 +83,6 @@ export default async function Home({ searchParams }: PageProps) {
     { range },
   );
   const safeHoursPerDay = Number.isFinite(estimatedHoursPerDay) && estimatedHoursPerDay > 0 ? estimatedHoursPerDay : 2;
-  const filteredSnapshots = snapshots.filter((snapshot) => {
-    const capturedAt = new Date(snapshot.capturedAt);
-    return capturedAt >= range.start && capturedAt <= range.end;
-  });
   const timeline = filteredSnapshots.map((snapshot, index) => {
     const startAt = new Date(snapshot.capturedAt);
     const nextAt = filteredSnapshots[index + 1] ? new Date(filteredSnapshots[index + 1].capturedAt) : range.end;
@@ -156,7 +158,7 @@ export default async function Home({ searchParams }: PageProps) {
           </p>
 
           <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-5">
-            <StatCard label="Snapshots" value={String(snapshots.length)} />
+            <StatCard label="Snapshots" value={String(filteredSnapshots.length)} />
             <StatCard
               label="Songs (hours)"
               value={`${songStats.reduce((sum, item) => sum + item.totalHours, 0).toFixed(1)}h`}
@@ -206,27 +208,32 @@ export default async function Home({ searchParams }: PageProps) {
 
           <section className="mt-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
             <h2 className="text-lg font-semibold">Drill down</h2>
+            {!filteredSnapshots.length && snapshots.length > 0 ? (
+              <p className="mt-2 text-sm text-[var(--muted)]">
+                No snapshots found in this range. Try widening the date range or selecting All time.
+              </p>
+            ) : null}
             <div className="mt-4 flex flex-wrap gap-3">
               <Link
-                href="/songs"
+                href={`/songs?${rangeQuery}`}
                 className="rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm hover:brightness-110"
               >
                 Songs page
               </Link>
               <Link
-                href="/albums"
+                href={`/albums?${rangeQuery}`}
                 className="rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm hover:brightness-110"
               >
                 Albums page
               </Link>
               <Link
-                href="/artists"
+                href={`/artists?${rangeQuery}`}
                 className="rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm hover:brightness-110"
               >
                 Artists page
               </Link>
               <Link
-                href="/genres"
+                href={`/genres?${rangeQuery}`}
                 className="rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm hover:brightness-110"
               >
                 Genres page

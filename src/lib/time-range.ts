@@ -9,25 +9,47 @@ export type TimeRange = {
   label: string;
 };
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-
 function parseDateOnly(value?: string): Date | undefined {
   if (!value) return undefined;
-  const date = new Date(`${value}T00:00:00.000Z`);
+  const date = new Date(`${value}T00:00:00`);
   if (Number.isNaN(date.getTime())) return undefined;
   return date;
 }
 
 function endOfDateOnly(value?: string): Date | undefined {
   if (!value) return undefined;
-  const date = new Date(`${value}T23:59:59.999Z`);
+  const date = new Date(`${value}T23:59:59.999`);
   if (Number.isNaN(date.getTime())) return undefined;
   return date;
 }
 
+function startOfDay(date: Date): Date {
+  const out = new Date(date);
+  out.setHours(0, 0, 0, 0);
+  return out;
+}
+
+function startOfWeek(date: Date): Date {
+  const out = startOfDay(date);
+  out.setDate(out.getDate() - out.getDay());
+  return out;
+}
+
+function startOfMonth(date: Date): Date {
+  const out = startOfDay(date);
+  out.setDate(1);
+  return out;
+}
+
+function startOfYear(date: Date): Date {
+  const out = startOfDay(date);
+  out.setMonth(0, 1);
+  return out;
+}
+
 function pickPreset(value?: string): TimePreset {
   const presets: TimePreset[] = ["day", "week", "month", "year", "all", "custom"];
-  return presets.includes((value ?? "") as TimePreset) ? (value as TimePreset) : "week";
+  return presets.includes((value ?? "") as TimePreset) ? (value as TimePreset) : "all";
 }
 
 export function resolveTimeRange(params: {
@@ -64,28 +86,20 @@ export function resolveTimeRange(params: {
     };
   }
 
-  const spanMs =
+  const start =
     preset === "day"
-      ? DAY_MS
+      ? startOfDay(now)
       : preset === "week"
-        ? 7 * DAY_MS
+        ? startOfWeek(now)
         : preset === "month"
-          ? 30 * DAY_MS
-          : 365 * DAY_MS;
-
-  const start = new Date(now.getTime() - spanMs);
+          ? startOfMonth(now)
+          : startOfYear(now);
 
   return {
     preset,
     start,
     end: now,
     label:
-      preset === "day"
-        ? "Last 24 hours"
-        : preset === "week"
-          ? "Last 7 days"
-          : preset === "month"
-            ? "Last 30 days"
-            : "Last 365 days",
+      preset === "day" ? "Today" : preset === "week" ? "This week" : preset === "month" ? "This month" : "This year",
   };
 }

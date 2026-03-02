@@ -13,6 +13,20 @@ type SubGetter<T> = (item: T) => string | undefined;
 type RankGetter<T> = (item: T) => number;
 type ScoreGetter<T> = (item: T) => number;
 
+function parseSnapshotDate(value: string): Date | undefined {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
+export function snapshotsInRange(snapshots: Snapshot[], range?: TimeRange): Snapshot[] {
+  if (!range) return snapshots;
+  return snapshots.filter((snapshot) => {
+    const capturedAt = parseSnapshotDate(snapshot.capturedAt);
+    if (!capturedAt) return false;
+    return capturedAt >= range.start && capturedAt <= range.end;
+  });
+}
+
 export function buildCollectionStats<T>(
   snapshots: Snapshot[],
   getItems: ItemGetter<T>,
@@ -30,12 +44,7 @@ export function buildCollectionStats<T>(
   const range = options?.range;
   const envHours = Number(process.env.ESTIMATED_LISTENING_HOURS_PER_DAY ?? "2");
   const estimatedHoursPerDay = options?.estimatedHoursPerDay ?? (Number.isFinite(envHours) && envHours > 0 ? envHours : 2);
-  const windowedSnapshots = range
-    ? snapshots.filter((snapshot) => {
-        const capturedAt = new Date(snapshot.capturedAt);
-        return capturedAt >= range.start && capturedAt <= range.end;
-      })
-    : snapshots;
+  const windowedSnapshots = snapshotsInRange(snapshots, range);
 
   const latest = latestSnapshot(windowedSnapshots);
   if (!latest) return [];
@@ -49,9 +58,11 @@ export function buildCollectionStats<T>(
 
   for (let index = 0; index < windowedSnapshots.length; index += 1) {
     const snapshot = windowedSnapshots[index];
-    const snapshotAt = new Date(snapshot.capturedAt);
+    const snapshotAt = parseSnapshotDate(snapshot.capturedAt);
+    if (!snapshotAt) continue;
     const nextSnapshot = windowedSnapshots[index + 1];
-    const nextAt = nextSnapshot ? new Date(nextSnapshot.capturedAt) : new Date();
+    const nextAt =
+      (nextSnapshot ? parseSnapshotDate(nextSnapshot.capturedAt) : undefined) ?? new Date();
 
     const clampedStart = range ? new Date(Math.max(snapshotAt.getTime(), range.start.getTime())) : snapshotAt;
     const clampedEnd = range ? new Date(Math.min(nextAt.getTime(), range.end.getTime())) : nextAt;

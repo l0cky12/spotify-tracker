@@ -7,10 +7,10 @@ type Props = {
 };
 
 const presets: Array<{ value: TimePreset; label: string }> = [
-  { value: "day", label: "Day" },
-  { value: "week", label: "Week" },
-  { value: "month", label: "Month" },
-  { value: "year", label: "Year" },
+  { value: "day", label: "Today" },
+  { value: "week", label: "This week" },
+  { value: "month", label: "This month" },
+  { value: "year", label: "This year" },
   { value: "all", label: "All time" },
   { value: "custom", label: "Custom" },
 ];
