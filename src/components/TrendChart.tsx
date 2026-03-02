@@ -1,5 +1,6 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import {
   Line,
   LineChart,
@@ -15,14 +16,24 @@ type Point = {
 };
 
 export function TrendChart({ points }: { points: Point[] }) {
+  const isClient = useSyncExternalStore(
+    () => () => undefined,
+    () => true,
+    () => false,
+  );
+
   const chartData = points.map((p) => ({
     date: new Date(p.capturedAt).toLocaleDateString(),
     rank: p.rank,
   }));
 
+  if (!isClient) {
+    return <div className="h-28 w-full rounded-md bg-[var(--panel-soft)]/60" />;
+  }
+
   return (
-    <div className="h-28 w-full">
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="h-28 w-full min-w-0">
+      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={112}>
         <LineChart data={chartData}>
           <XAxis dataKey="date" hide />
           <YAxis reversed domain={[1, 50]} hide />

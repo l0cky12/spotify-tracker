@@ -1,5 +1,6 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import {
   CartesianGrid,
   Cell,
@@ -29,13 +30,31 @@ const pieColors = ["#fb7185", "#f97316", "#facc15", "#34d399", "#60a5fa", "#a78b
 const formatHours = (value: unknown) => `${Number(value ?? 0).toFixed(2)}h`;
 
 export function DashboardVisuals({ domainSlices, genreSlices, bubbles, timeline }: Props) {
+  const isClient = useSyncExternalStore(
+    () => () => undefined,
+    () => true,
+    () => false,
+  );
+
+  if (!isClient) {
+    return (
+      <section className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <article key={index} className="h-96 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-4">
+            <div className="h-full w-full rounded-lg bg-[var(--panel-soft)]/60" />
+          </article>
+        ))}
+      </section>
+    );
+  }
+
   return (
     <section className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
       <article className="rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-4">
         <p className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">Listening Mix</p>
         <h3 className="mt-2 text-lg font-semibold">Songs vs Albums vs Artists vs Genres</h3>
-        <div className="mt-4 h-72">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="mt-4 h-72 min-w-0">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={240}>
             <PieChart>
               <Pie data={domainSlices} dataKey="value" nameKey="name" innerRadius={55} outerRadius={95} paddingAngle={4}>
                 {domainSlices.map((entry, idx) => (
@@ -51,8 +70,8 @@ export function DashboardVisuals({ domainSlices, genreSlices, bubbles, timeline 
       <article className="rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-4">
         <p className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">Genre Split</p>
         <h3 className="mt-2 text-lg font-semibold">Top Genres by Estimated Hours</h3>
-        <div className="mt-4 h-72">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="mt-4 h-72 min-w-0">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={240}>
             <PieChart>
               <Pie data={genreSlices} dataKey="value" nameKey="name" outerRadius={100}>
                 {genreSlices.map((entry, idx) => (
@@ -68,8 +87,8 @@ export function DashboardVisuals({ domainSlices, genreSlices, bubbles, timeline 
       <article className="rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-4">
         <p className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">Bubble Chart</p>
         <h3 className="mt-2 text-lg font-semibold">Top Songs Footprint</h3>
-        <div className="mt-4 h-72">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="mt-4 h-72 min-w-0">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={240}>
             <ScatterChart margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
               <CartesianGrid stroke="var(--stroke)" strokeDasharray="4 4" />
               <XAxis type="number" dataKey="hours" name="Hours" tick={{ fill: "var(--muted)" }} />
@@ -93,8 +112,8 @@ export function DashboardVisuals({ domainSlices, genreSlices, bubbles, timeline 
       <article className="rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-4">
         <p className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">Timeline</p>
         <h3 className="mt-2 text-lg font-semibold">Estimated Hours by Snapshot Interval</h3>
-        <div className="mt-4 h-72">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="mt-4 h-72 min-w-0">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={240}>
             <ScatterChart margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
               <CartesianGrid stroke="var(--stroke)" strokeDasharray="4 4" />
               <XAxis dataKey="date" name="Date" tick={{ fill: "var(--muted)", fontSize: 11 }} />
