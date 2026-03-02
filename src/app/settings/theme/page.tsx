@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { Nav } from "@/components/Nav";
 import { ThemePicker } from "@/components/ThemePicker";
 import { DISPLAY_UNIT_COOKIE, parseDisplayUnit } from "@/lib/display-unit";
+import { AUTO_SYNC_INTERVAL_COOKIE, autoSyncLabel, parseAutoSyncInterval } from "@/lib/auto-sync";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,7 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
   const importReason = firstParam(params.reason);
   const cookieStore = await cookies();
   const displayUnit = parseDisplayUnit(cookieStore.get(DISPLAY_UNIT_COOKIE)?.value);
+  const autoSyncMinutes = parseAutoSyncInterval(cookieStore.get(AUTO_SYNC_INTERVAL_COOKIE)?.value);
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 pt-20 md:px-8 lg:pl-72 lg:pt-8">
       <Nav />
@@ -64,6 +66,60 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
             <p className="font-semibold">Minutes</p>
             <p className="text-sm text-[var(--muted)]">Show values like 195m</p>
           </button>
+        </form>
+      </section>
+
+      <section className="mt-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
+        <h2 className="text-lg font-semibold">Spotify Connection</h2>
+        <p className="mt-1 text-sm text-[var(--muted)]">Connect your account for manual/auto sync and now-playing data.</p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link
+            href="/api/auth/login"
+            className="rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-4 py-2 text-sm font-semibold hover:brightness-110"
+          >
+            Connect Spotify
+          </Link>
+          <form action="/api/auth/logout" method="post">
+            <button
+              type="submit"
+              className="rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-4 py-2 text-sm font-semibold hover:brightness-110"
+            >
+              Disconnect
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <section className="mt-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
+        <h2 className="text-lg font-semibold">Sync Schedule</h2>
+        <p className="mt-1 text-sm text-[var(--muted)]">
+          Automatically run Spotify sync in the background while this app is open.
+        </p>
+        <p className="mt-2 text-sm text-[var(--muted)]">Current: {autoSyncLabel(autoSyncMinutes)}</p>
+        <form action="/api/settings/auto-sync" method="post" className="mt-4 flex flex-wrap gap-3">
+          <input type="hidden" name="redirectTo" value="/settings/theme" />
+          {[
+            { label: "Off", value: 0 },
+            { label: "15 min", value: 15 },
+            { label: "30 min", value: 30 },
+            { label: "1 hour", value: 60 },
+            { label: "3 hours", value: 180 },
+            { label: "6 hours", value: 360 },
+          ].map((option) => (
+            <button
+              key={option.value}
+              type="submit"
+              name="autoSyncMinutes"
+              value={option.value}
+              className={`rounded-xl border px-4 py-2 text-sm font-medium transition ${
+                autoSyncMinutes === option.value
+                  ? "border-[var(--accent)] bg-[var(--panel-soft)]"
+                  : "border-[var(--stroke)] bg-[var(--panel-soft)]/60 hover:brightness-110"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
         </form>
       </section>
 

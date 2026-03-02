@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { DashboardVisuals } from "@/components/DashboardVisuals";
 import { Nav } from "@/components/Nav";
+import { AutoSync } from "@/components/AutoSync";
 import {
   convertHoursForDisplay,
   DISPLAY_UNIT_COOKIE,
@@ -14,6 +15,8 @@ import { RangeFilter } from "@/components/RangeFilter";
 import { buildCollectionStats, entriesInRange } from "@/lib/stats";
 import { readHistoryEntries } from "@/lib/storage";
 import { resolveTimeRange } from "@/lib/time-range";
+import { AUTO_SYNC_INTERVAL_COOKIE, autoSyncLabel, parseAutoSyncInterval } from "@/lib/auto-sync";
+import { fetchCurrentlyPlaying, refreshAccessToken } from "@/lib/spotify";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -43,6 +46,10 @@ export default async function Home({ searchParams }: PageProps) {
   const importState = firstParam(params.import);
   const importCount = firstParam(params.count);
   const importReason = firstParam(params.reason);
+  const syncState = firstParam(params.sync);
+  const syncCount = firstParam(params.count);
+  const syncError = firstParam(params.error);
+  const syncReason = firstParam(params.reason);
   const range = resolveTimeRange({
     range: firstParam(params.range),
     from: firstParam(params.from),
@@ -51,9 +58,22 @@ export default async function Home({ searchParams }: PageProps) {
 
   const cookieStore = await cookies();
   const displayUnit = parseDisplayUnit(cookieStore.get(DISPLAY_UNIT_COOKIE)?.value);
+  const autoSyncMinutes = parseAutoSyncInterval(cookieStore.get(AUTO_SYNC_INTERVAL_COOKIE)?.value);
+  const refreshToken = cookieStore.get("spotify_refresh_token")?.value;
   const unitLabel = displayUnitLabel(displayUnit);
   const unitSuffix = displayUnitSuffix(displayUnit);
   const toDisplay = (hours: number) => convertHoursForDisplay(hours, displayUnit);
+  const autoSyncText = autoSyncLabel(autoSyncMinutes);
+
+  let nowPlaying: Awaited<ReturnType<typeof fetchCurrentlyPlaying>> = null;
+  if (refreshToken) {
+    try {
+      const accessToken = await refreshAccessToken(refreshToken);
+      nowPlaying = await fetchCurrentlyPlaying(accessToken);
+    } catch {
+      nowPlaying = null;
+    }
+  }
 
   const allEntries = await readHistoryEntries();
   const filteredEntries = entriesInRange(allEntries, range);
@@ -82,6 +102,7 @@ export default async function Home({ searchParams }: PageProps) {
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 pt-20 md:px-8 lg:pl-72 lg:pt-8">
       <Nav />
+      <AutoSync intervalMinutes={autoSyncMinutes} />
 
       <header className="mb-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)]/90 p-6 shadow-[0_12px_30px_rgba(0,0,0,0.25)] backdrop-blur-sm">
         <h1 className="text-3xl font-bold text-[var(--text)]">Spotify Tracker</h1>
@@ -89,13 +110,22 @@ export default async function Home({ searchParams }: PageProps) {
           Import your Spotify JSON history and explore songs, albums, artists, and genres by listening time.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
+          <form action="/api/sync" method="post">
+            <button
+              type="submit"
+              className="rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-4 py-2 text-sm font-semibold hover:brightness-110"
+            >
+              Sync now
+            </button>
+          </form>
           <Link
             href="/settings/theme"
             className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-ink)] hover:brightness-110"
           >
-            Import JSON Data
+            Settings
           </Link>
         </div>
+        <p className="mt-3 text-xs text-[var(--muted)]">Auto-sync: {autoSyncText}</p>
       </header>
 
       {importState === "ok" ? (
@@ -108,6 +138,44 @@ export default async function Home({ searchParams }: PageProps) {
           Import failed{importReason ? `: ${importReason}` : "."}
         </p>
       ) : null}
+      {syncState === "ok" ? (
+        <p className="mt-4 rounded-lg border border-sky-500/50 bg-sky-500/10 px-3 py-2 text-sm text-sky-200">
+          Sync completed: {syncCount ?? "0"} recent plays imported.
+        </p>
+      ) : null}
+      {syncError === "auth-required" ? (
+        <p className="mt-4 rounded-lg border border-rose-500/50 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+          Sync failed: connect Spotify first from Settings.
+        </p>
+      ) : null}
+      {syncError === "sync-failed" ? (
+        <p className="mt-4 rounded-lg border border-rose-500/50 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+          Sync failed{syncReason ? `: ${syncReason}` : "."}
+        </p>
+      ) : null}
+
+      <section className="mt-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
+        <p className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">Now Playing</p>
+        {nowPlaying ? (
+          <div className="mt-3 flex items-center gap-3">
+            {nowPlaying.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={nowPlaying.imageUrl} alt={nowPlaying.albumName} className="h-14 w-14 rounded-md object-cover" />
+            ) : (
+              <div className="h-14 w-14 rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)]" />
+            )}
+            <div>
+              <p className="text-sm font-semibold">{nowPlaying.trackName}</p>
+              <p className="text-xs text-[var(--muted)]">{nowPlaying.artistName}</p>
+              <p className="text-xs text-[var(--muted)]">
+                {nowPlaying.isPlaying ? "Playing now" : "Not currently playing"}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <p className="mt-2 text-sm text-[var(--muted)]">No active track right now.</p>
+        )}
+      </section>
 
       <RangeFilter selectedRange={range.preset} from={range.from} to={range.to} />
       <p className="mt-3 text-xs uppercase tracking-wide text-[var(--muted)]">Range: {range.label}</p>

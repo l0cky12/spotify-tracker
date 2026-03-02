@@ -85,6 +85,30 @@ export function Nav() {
         </div>
 
         <div className="mt-auto space-y-2">
+          <form action="/api/sync" method="post">
+            <input type="hidden" name="redirectTo" value={`${pathname}${suffix}`} />
+            <button
+              type="submit"
+              className="block w-full rounded-lg border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-center text-sm font-semibold text-[var(--text)] transition hover:brightness-110"
+            >
+              Sync now
+            </button>
+          </form>
+          <Link
+            href="/api/auth/login"
+            onClick={() => setOpen(false)}
+            className="block w-full rounded-lg border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-center text-sm font-semibold text-[var(--text)] transition hover:brightness-110"
+          >
+            Connect Spotify
+          </Link>
+          <form action="/api/auth/logout" method="post">
+            <button
+              type="submit"
+              className="block w-full rounded-lg border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-center text-sm font-semibold text-[var(--text)] transition hover:brightness-110"
+            >
+              Disconnect
+            </button>
+          </form>
           <Link
             href={`/settings/theme${suffix}`}
             onClick={() => setOpen(false)}
@@ -96,9 +120,6 @@ export function Nav() {
           >
             Settings
           </Link>
-          <p className="rounded-lg border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-center text-xs text-[var(--muted)]">
-            Import Spotify JSON from Settings
-          </p>
         </div>
       </nav>
     </>

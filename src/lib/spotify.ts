@@ -1,3 +1,5 @@
+import { HistoryEntry } from "./types";
+
 const SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token";
 const SPOTIFY_API_BASE = "https://api.spotify.com/v1";
 
@@ -140,6 +142,50 @@ export async function fetchCurrentlyPlaying(accessToken: string): Promise<Curren
   };
 }
 
+export async function fetchRecentlyPlayed(accessToken: string, limit = 50): Promise<HistoryEntry[]> {
+  const response = await fetch(`${SPOTIFY_API_BASE}/me/player/recently-played?limit=${Math.min(Math.max(limit, 1), 50)}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Spotify recently-played failed: ${response.status} ${detail.slice(0, 180)}`);
+  }
+
+  const json = (await response.json()) as {
+    items?: Array<{
+      played_at?: string;
+      track?: {
+        name?: string;
+        uri?: string;
+        duration_ms?: number;
+        artists?: Array<{ name?: string }>;
+        album?: { name?: string };
+      } | null;
+    }>;
+  };
+
+  const items = json.items ?? [];
+  return items
+    .filter((item) => item.played_at && item.track?.name)
+    .map((item) => ({
+      ts: item.played_at as string,
+      ms_played: Math.max(0, item.track?.duration_ms ?? 0),
+      master_metadata_track_name: item.track?.name ?? null,
+      master_metadata_album_artist_name: item.track?.artists?.[0]?.name ?? null,
+      master_metadata_album_album_name: item.track?.album?.name ?? null,
+      spotify_track_uri: item.track?.uri ?? null,
+      reason_start: null,
+      reason_end: "trackdone",
+      shuffle: undefined,
+      skipped: undefined,
+    }))
+    .filter((entry) => entry.ms_played > 0);
+}
+
 export function buildLoginUrl() {
   const clientId = requireEnv("SPOTIFY_CLIENT_ID");
   const redirectUri = requireEnv("SPOTIFY_REDIRECT_URI");
@@ -147,7 +193,7 @@ export function buildLoginUrl() {
   const params = new URLSearchParams({
     response_type: "code",
     client_id: clientId,
-    scope: "user-top-read user-read-currently-playing user-read-playback-state",
+    scope: "user-top-read user-read-currently-playing user-read-playback-state user-read-recently-played",
     redirect_uri: redirectUri,
     show_dialog: "false",
   });
