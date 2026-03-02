@@ -41,6 +41,16 @@ export default async function Home() {
     (i) => i.rank,
     (i) => i.score,
   );
+  const genreStats = buildCollectionStats(
+    snapshots,
+    (s) => s.genres ?? [],
+    (i) => i.id,
+    (i) => i.name,
+    () => "",
+    () => undefined,
+    (i) => i.rank,
+    (i) => i.score,
+  );
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 pt-20 md:px-8 lg:pl-72 lg:pt-8">
@@ -67,14 +77,15 @@ export default async function Home() {
         <>
           <Nav />
 
-          <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-4">
+          <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-5">
             <StatCard label="Snapshots" value={String(snapshots.length)} />
             <StatCard label="Tracked Songs" value={String(songStats.length)} />
             <StatCard label="Tracked Albums" value={String(albumStats.length)} />
             <StatCard label="Tracked Artists" value={String(artistStats.length)} />
+            <StatCard label="Tracked Genres" value={String(genreStats.length)} />
           </section>
 
-          <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+          <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
             <TopCard
               title="Top Song (current)"
               primary={latest?.tracks[0]?.name ?? "No data"}
@@ -89,6 +100,11 @@ export default async function Home() {
               title="Top Artist (current)"
               primary={latest?.artists[0]?.name ?? "No data"}
               secondary={snapshots.length ? "From latest snapshot" : "Run Sync now"}
+            />
+            <TopCard
+              title="Top Genre (current)"
+              primary={latest?.genres?.[0]?.name ?? "No data"}
+              secondary={latest?.genres?.length ? "From latest snapshot" : "Run Sync now"}
             />
           </section>
 
@@ -112,6 +128,12 @@ export default async function Home() {
                 className="rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm hover:brightness-110"
               >
                 Artists page
+              </Link>
+              <Link
+                href="/genres"
+                className="rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm hover:brightness-110"
+              >
+                Genres page
               </Link>
             </div>
           </section>

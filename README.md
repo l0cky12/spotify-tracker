@@ -6,12 +6,14 @@ A private Spotify tracking app that stores snapshots over time and gives you ded
 
 - Spotify OAuth connect/disconnect
 - Manual sync to snapshot top songs/artists (albums derived from tracks)
+- Genre tracking derived from your top artists
 - Persistent history in `data/snapshots.json`
 - Home dashboard with overview stats
 - Dedicated pages:
   - `/songs`
   - `/albums`
   - `/artists`
+  - `/genres`
 
 ## Tech stack
 

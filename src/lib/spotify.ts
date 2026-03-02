@@ -110,6 +110,7 @@ type TopArtistsResponse = {
     id: string;
     name: string;
     images: Array<{ url: string }>;
+    genres: string[];
   }>;
 };
 
@@ -137,6 +138,35 @@ export async function fetchSnapshot(accessToken: string): Promise<Snapshot> {
     rank: idx + 1,
     score: 51 - (idx + 1),
   }));
+
+  const genreMap = new Map<string, { name: string; score: number; bestRank: number }>();
+  for (const [idx, artist] of artistsRes.items.entries()) {
+    const artistRank = idx + 1;
+    const artistScore = 51 - artistRank;
+    for (const genre of artist.genres) {
+      const id = genre.toLowerCase().replace(/\s+/g, "-");
+      const existing = genreMap.get(id);
+      if (!existing) {
+        genreMap.set(id, { name: genre, score: artistScore, bestRank: artistRank });
+        continue;
+      }
+
+      existing.score += artistScore;
+      if (artistRank < existing.bestRank) {
+        existing.bestRank = artistRank;
+      }
+    }
+  }
+
+  const genres = Array.from(genreMap.entries())
+    .map(([id, value]) => ({
+      id,
+      name: value.name,
+      rank: value.bestRank,
+      score: value.score,
+    }))
+    .sort((a, b) => b.score - a.score || a.rank - b.rank)
+    .map((genre, idx) => ({ ...genre, rank: idx + 1 }));
 
   const albumMap = new Map<string, AlbumStat>();
   for (const track of tracks) {
@@ -168,6 +198,7 @@ export async function fetchSnapshot(accessToken: string): Promise<Snapshot> {
     tracks,
     artists,
     albums,
+    genres,
   };
 }
 

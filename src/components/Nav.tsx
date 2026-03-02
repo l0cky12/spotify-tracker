@@ -9,6 +9,7 @@ const links = [
   { href: "/songs", label: "Songs" },
   { href: "/albums", label: "Albums" },
   { href: "/artists", label: "Artists" },
+  { href: "/genres", label: "Genres" },
 ];
 
 export function Nav() {

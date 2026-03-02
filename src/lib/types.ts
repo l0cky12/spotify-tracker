@@ -32,11 +32,19 @@ export type AlbumStat = {
   score: number;
 };
 
+export type GenreStat = {
+  id: string;
+  name: string;
+  rank: number;
+  score: number;
+};
+
 export type Snapshot = {
   capturedAt: string;
   tracks: TrackStat[];
   artists: ArtistStat[];
   albums: AlbumStat[];
+  genres?: GenreStat[];
 };
 
 export type CollectionStats = {
