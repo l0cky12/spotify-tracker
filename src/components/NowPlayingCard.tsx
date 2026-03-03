@@ -67,7 +67,7 @@ export function NowPlayingCard({ initialNowPlaying, refreshSeconds }: Props) {
   }, [clientProgressMs, nowPlaying?.durationMs]);
 
   return (
-    <section className="ui-panel mt-6 p-5">
+    <section className="ui-panel p-5">
       <p className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Now Playing</p>
       {nowPlaying ? (
         <div className="mt-3 flex items-center gap-3">

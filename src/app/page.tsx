@@ -108,29 +108,33 @@ export default async function Home({ searchParams }: PageProps) {
   const timeline = buildTimeline(analyticsEntries, toDisplay);
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8 pt-20 md:px-8 lg:pl-72 lg:pt-8">
+    <main className="mx-auto max-w-7xl px-4 py-8 pt-20 md:px-8 lg:pl-72 lg:pt-8">
       <Nav />
       <AutoSync intervalMinutes={autoSyncMinutes} />
 
-      <header className="ui-panel mb-6 p-6 sm:p-7">
-        <p className="text-xs uppercase tracking-[0.2em] text-[var(--accent)]">Dashboard</p>
-        <h1 className="mt-2 text-3xl font-bold text-[var(--text)] sm:text-4xl">Spotify Tracker</h1>
-        <p className="mt-3 max-w-2xl text-sm text-[var(--muted)]">
-          Import your Spotify JSON history and explore songs, albums, artists, and genres by listening time.
-        </p>
-        <div className="mt-4 flex flex-wrap gap-3">
-          <Link
-            href="/settings/theme"
-            className="ui-primary-btn px-4 py-2 text-sm"
-          >
-            Settings
-          </Link>
+      <section className="mb-6 grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <header className="ui-panel p-6 sm:p-7 xl:col-span-2">
+          <p className="text-xs uppercase tracking-[0.24em] text-[var(--accent)]">Control Center</p>
+          <h1 className="mt-3 text-3xl font-bold leading-tight text-[var(--text)] sm:text-5xl">Spotify Tracker</h1>
+          <p className="mt-3 max-w-2xl text-sm text-[var(--muted)]">
+            Analyze your listening history with ranked insights, modern charts, and real-time now playing.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <span className="ui-soft-panel px-2 py-1 text-xs text-[var(--muted)]">Auto-sync: {autoSyncText}</span>
+            <span className="ui-soft-panel px-2 py-1 text-xs text-[var(--muted)]">Refresh: {nowPlayingRefreshText}</span>
+            <span className="ui-soft-panel px-2 py-1 text-xs text-[var(--muted)]">Range: {range.label}</span>
+          </div>
+          <div className="mt-5">
+            <Link href="/settings/theme" className="ui-primary-btn inline-flex px-4 py-2 text-sm">
+              Open Settings
+            </Link>
+          </div>
+        </header>
+
+        <div className="xl:mt-0">
+          <NowPlayingCard initialNowPlaying={nowPlaying} refreshSeconds={nowPlayingRefreshSeconds} />
         </div>
-        <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-[var(--muted)]">
-          <span className="ui-soft-panel px-2 py-1">Auto-sync: {autoSyncText}</span>
-          <span className="ui-soft-panel px-2 py-1">Now Playing refresh: {nowPlayingRefreshText}</span>
-        </div>
-      </header>
+      </section>
 
       {syncState === "ok" ? (
         <p className="ui-soft-panel mt-4 px-3 py-2 text-sm text-sky-200">
@@ -148,10 +152,8 @@ export default async function Home({ searchParams }: PageProps) {
         </p>
       ) : null}
 
-      <NowPlayingCard initialNowPlaying={nowPlaying} refreshSeconds={nowPlayingRefreshSeconds} />
-
       <RangeFilter selectedRange={range.preset} from={range.from} to={range.to} />
-      <p className="mt-3 text-xs uppercase tracking-wide text-[var(--muted)]">Range: {range.label}</p>
+      <p className="mt-3 text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Range: {range.label}</p>
 
       <section className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <StatCard label="Plays" value={String(analyticsEntries.length)} />
@@ -253,8 +255,8 @@ export default async function Home({ searchParams }: PageProps) {
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
     <article className="ui-panel p-4">
-      <p className="text-xs uppercase tracking-wide text-[var(--muted)]">{label}</p>
-      <p className="mt-2 text-2xl font-bold">{value}</p>
+      <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">{label}</p>
+      <p className="mt-3 text-3xl font-bold leading-none">{value}</p>
     </article>
   );
 }

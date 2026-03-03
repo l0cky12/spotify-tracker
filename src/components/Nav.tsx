@@ -47,7 +47,7 @@ export function Nav() {
       ) : null}
 
       <nav
-        className={`fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r border-[var(--stroke)] bg-[color:var(--panel-glass)] p-5 shadow-[0_18px_48px_rgba(0,0,0,0.34)] backdrop-blur-xl transition-transform duration-300 lg:translate-x-0 ${
+        className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-[var(--stroke)] bg-[color:var(--panel-glass)] p-5 shadow-[0_18px_48px_rgba(0,0,0,0.34)] backdrop-blur-xl transition-transform duration-300 lg:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
