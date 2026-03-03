@@ -3,12 +3,11 @@ import { NextResponse } from "next/server";
 import {
   addTracksToSpotifyPlaylist,
   createSpotifyPlaylist,
-  fetchDiscoveryTrackUris,
   fetchMySpotifyUserId,
-  fetchNewReleaseTrackUris,
-  fetchTopTrackUris,
   refreshAccessToken,
 } from "@/lib/spotify";
+import { readHistoryEntries } from "@/lib/storage";
+import { buildPlaylistInsights } from "@/lib/playlist-recommendations";
 
 function redirectWith(url: string, params: Record<string, string>) {
   const target = new URL(url, "http://localhost");
@@ -20,7 +19,7 @@ function redirectWith(url: string, params: Record<string, string>) {
 
 export async function POST(request: Request) {
   const formData = await request.formData();
-  const mixType = String(formData.get("mixType") ?? "top-tracks");
+  const mixType = String(formData.get("mixType") ?? "most-played-month");
   const redirectTo = String(formData.get("redirectTo") ?? "/playlists");
 
   const cookieStore = await cookies();
@@ -36,25 +35,17 @@ export async function POST(request: Request) {
   try {
     const accessToken = await refreshAccessToken(refreshToken);
     const userId = await fetchMySpotifyUserId(accessToken);
+    const entries = await readHistoryEntries();
+    const insights = buildPlaylistInsights(entries);
 
-    let uris: string[] = [];
-    let playlistName = "";
-
-    if (mixType === "top-tracks") {
-      uris = await fetchTopTrackUris(accessToken, 20);
-      playlistName = "Spotify Tracker - Top Tracks";
-    } else if (mixType === "new-releases") {
-      uris = await fetchNewReleaseTrackUris(20);
-      playlistName = "Spotify Tracker - New Releases";
-    } else {
-      uris = await fetchDiscoveryTrackUris(accessToken, 20);
-      playlistName = "Spotify Tracker - Discovery Mix";
-    }
+    const mix = insights.mixes.find((item) => item.id === mixType);
+    const uris = (mix?.tracks ?? []).map((track) => track.uri).filter(Boolean).slice(0, 100);
+    const playlistName = `Spotify Tracker - ${mix?.title ?? "Custom Mix"}`;
 
     if (!uris.length) {
       return redirectWith(redirectTo, {
         created: "failed",
-        reason: "No tracks found for this mix type.",
+        reason: "No Spotify-track URIs found for this mix.",
       });
     }
 

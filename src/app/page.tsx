@@ -10,6 +10,7 @@ import {
 } from "@/lib/display-unit";
 import { RangeFilter } from "@/components/RangeFilter";
 import { DashboardCustomizer } from "@/components/DashboardCustomizer";
+import { VisualDashboards } from "@/components/VisualDashboards";
 import { buildCollectionStats, entriesInRange } from "@/lib/stats";
 import { readHistoryEntries } from "@/lib/storage";
 import { resolveTimeRange } from "@/lib/time-range";
@@ -29,6 +30,57 @@ type PageProps = {
 
 function firstParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
+}
+
+function buildDailyTimeline(entries: Awaited<ReturnType<typeof readHistoryEntries>>) {
+  const byDay = new Map<string, { ms: number; plays: number }>();
+  for (const entry of entries) {
+    const key = entry.ts.slice(0, 10);
+    const current = byDay.get(key) ?? { ms: 0, plays: 0 };
+    current.ms += entry.ms_played;
+    current.plays += 1;
+    byDay.set(key, current);
+  }
+  return Array.from(byDay.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([date, value]) => ({ date: date.slice(5), hours: Number((value.ms / 3600000).toFixed(2)), plays: value.plays }));
+}
+
+function buildMonthlyTimeline(entries: Awaited<ReturnType<typeof readHistoryEntries>>) {
+  const byMonth = new Map<string, { ms: number; plays: number }>();
+  for (const entry of entries) {
+    const key = entry.ts.slice(0, 7);
+    const current = byMonth.get(key) ?? { ms: 0, plays: 0 };
+    current.ms += entry.ms_played;
+    current.plays += 1;
+    byMonth.set(key, current);
+  }
+  return Array.from(byMonth.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([month, value]) => ({ month, hours: Number((value.ms / 3600000).toFixed(1)), plays: value.plays }));
+}
+
+function buildArtistRankTimeline(entries: Awaited<ReturnType<typeof readHistoryEntries>>, topArtists: string[]) {
+  const dayArtistMs = new Map<string, Map<string, number>>();
+  for (const entry of entries) {
+    const artist = (entry.master_metadata_album_artist_name ?? "").trim() || "Unknown artist";
+    const day = entry.ts.slice(0, 10);
+    if (!dayArtistMs.has(day)) dayArtistMs.set(day, new Map());
+    const artistMap = dayArtistMs.get(day)!;
+    artistMap.set(artist, (artistMap.get(artist) ?? 0) + entry.ms_played);
+  }
+
+  return Array.from(dayArtistMs.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([day, artistMap]): { date: string; [key: string]: string | number | null } => {
+      const ranked = Array.from(artistMap.entries()).sort((a, b) => b[1] - a[1]).map(([artist]) => artist);
+      const row: { date: string; [key: string]: string | number | null } = { date: day.slice(5) };
+      for (const artist of topArtists) {
+        const rank = ranked.indexOf(artist);
+        row[artist] = rank >= 0 ? rank + 1 : null;
+      }
+      return row;
+    });
 }
 
 export default async function Home({ searchParams }: PageProps) {
@@ -84,6 +136,11 @@ export default async function Home({ searchParams }: PageProps) {
   const avgMinutes = analyticsEntries.length
     ? analyticsEntries.reduce((sum, entry) => sum + entry.ms_played, 0) / analyticsEntries.length / 60000
     : 0;
+  const dailyTimeline = buildDailyTimeline(analyticsEntries);
+  const monthlyTimeline = buildMonthlyTimeline(analyticsEntries);
+  const topArtistNames = artistStats.slice(0, 4).map((artist) => artist.name);
+  const artistRankTimeline = buildArtistRankTimeline(analyticsEntries, topArtistNames);
+  const genreSplit = genreStats.slice(0, 8).map((genre) => ({ name: genre.name, hours: Number(genre.totalHours.toFixed(2)) }));
 
   return (
     <main className="w-full px-4 py-8 pt-20 md:px-8 lg:pl-[19rem] lg:pr-8 lg:pt-8">
@@ -131,6 +188,7 @@ export default async function Home({ searchParams }: PageProps) {
           { id: "sync-status", label: "Sync Status" },
           { id: "range", label: "Range Filter" },
           { id: "stats", label: "Dashboard Stats" },
+          { id: "visuals", label: "Visual Dashboards" },
           { id: "library", label: "Browse Library" },
         ]}
       />
@@ -232,6 +290,13 @@ export default async function Home({ searchParams }: PageProps) {
             </Link>
           </div>
         </section>
+
+        <VisualDashboards
+          timeline={dailyTimeline}
+          genres={genreSplit}
+          artistRanks={artistRankTimeline}
+          monthly={monthlyTimeline}
+        />
       </div>
     </main>
   );
