@@ -91,6 +91,30 @@
   --highlight: #ffffff1f;
 }
 
+[data-accent="spotify"] {
+  --accent: #1ed760;
+  --glow-a: #1ed7603d;
+  --glow-b: #10b9812b;
+}
+
+[data-accent="ocean"] {
+  --accent: #38bdf8;
+  --glow-a: #38bdf844;
+  --glow-b: #0ea5e93b;
+}
+
+[data-accent="sunset"] {
+  --accent: #f97316;
+  --glow-a: #fb923c4b;
+  --glow-b: #f973163a;
+}
+
+[data-accent="rose"] {
+  --accent: #fb7185;
+  --glow-a: #fb71854a;
+  --glow-b: #e11d4840;
+}
+
 @theme inline {
   --font-sans: var(--font-main);
 }

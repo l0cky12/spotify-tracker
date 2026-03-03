@@ -280,7 +280,8 @@ export function buildLoginUrl() {
   const params = new URLSearchParams({
     response_type: "code",
     client_id: clientId,
-    scope: "user-top-read user-read-currently-playing user-read-playback-state user-read-recently-played",
+    scope:
+      "user-top-read user-read-currently-playing user-read-playback-state user-read-recently-played playlist-modify-private playlist-modify-public",
     redirect_uri: redirectUri,
     show_dialog: "false",
   });
@@ -463,4 +464,140 @@ export async function fetchTrackContextByName(params: {
   } catch {
     return null;
   }
+}
+
+async function spotifyGet(accessToken: string, path: string): Promise<Response> {
+  return fetch(`${SPOTIFY_API_BASE}${path}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
+  });
+}
+
+export async function fetchMySpotifyUserId(accessToken: string): Promise<string> {
+  const response = await spotifyGet(accessToken, "/me");
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Spotify me failed: ${response.status} ${detail.slice(0, 180)}`);
+  }
+  const json = (await response.json()) as { id?: string };
+  if (!json.id) throw new Error("Spotify me response missing id");
+  return json.id;
+}
+
+export async function createSpotifyPlaylist(params: {
+  accessToken: string;
+  userId: string;
+  name: string;
+  description: string;
+  isPublic?: boolean;
+}): Promise<{ id: string; externalUrl: string }> {
+  const response = await fetch(`${SPOTIFY_API_BASE}/users/${encodeURIComponent(params.userId)}/playlists`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${params.accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name: params.name,
+      description: params.description,
+      public: Boolean(params.isPublic),
+    }),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Create playlist failed: ${response.status} ${detail.slice(0, 180)}`);
+  }
+
+  const json = (await response.json()) as { id?: string; external_urls?: { spotify?: string } };
+  if (!json.id) throw new Error("Create playlist response missing id");
+  return { id: json.id, externalUrl: json.external_urls?.spotify ?? "" };
+}
+
+export async function addTracksToSpotifyPlaylist(params: {
+  accessToken: string;
+  playlistId: string;
+  uris: string[];
+}): Promise<void> {
+  const uris = params.uris.filter(Boolean).slice(0, 100);
+  if (!uris.length) return;
+
+  const response = await fetch(`${SPOTIFY_API_BASE}/playlists/${encodeURIComponent(params.playlistId)}/tracks`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${params.accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ uris }),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Add tracks failed: ${response.status} ${detail.slice(0, 180)}`);
+  }
+}
+
+export async function fetchTopTrackUris(accessToken: string, limit = 20): Promise<string[]> {
+  const response = await spotifyGet(accessToken, `/me/top/tracks?limit=${Math.min(Math.max(limit, 1), 50)}`);
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Top tracks failed: ${response.status} ${detail.slice(0, 180)}`);
+  }
+  const json = (await response.json()) as { items?: Array<{ uri?: string }> };
+  return (json.items ?? []).map((item) => item.uri ?? "").filter(Boolean);
+}
+
+export async function fetchNewReleaseTrackUris(limit = 20): Promise<string[]> {
+  const clientToken = await requestClientCredentialsToken();
+  const releaseResponse = await fetch(`${SPOTIFY_API_BASE}/browse/new-releases?limit=10`, {
+    headers: { Authorization: `Bearer ${clientToken}` },
+    cache: "no-store",
+  });
+  if (!releaseResponse.ok) return [];
+
+  const releaseJson = (await releaseResponse.json()) as {
+    albums?: { items?: Array<{ id?: string }> };
+  };
+
+  const albumIds = (releaseJson.albums?.items ?? []).map((item) => item.id ?? "").filter(Boolean).slice(0, 10);
+  const uris: string[] = [];
+  for (const albumId of albumIds) {
+    const tracksResponse = await fetch(
+      `${SPOTIFY_API_BASE}/albums/${encodeURIComponent(albumId)}/tracks?limit=5`,
+      {
+        headers: { Authorization: `Bearer ${clientToken}` },
+        cache: "no-store",
+      },
+    );
+    if (!tracksResponse.ok) continue;
+    const tracksJson = (await tracksResponse.json()) as { items?: Array<{ uri?: string }> };
+    for (const track of tracksJson.items ?? []) {
+      if (track.uri) uris.push(track.uri);
+      if (uris.length >= limit) return uris;
+    }
+  }
+  return uris.slice(0, limit);
+}
+
+export async function fetchDiscoveryTrackUris(accessToken: string, limit = 20): Promise<string[]> {
+  const topArtistsResponse = await spotifyGet(accessToken, "/me/top/artists?limit=5");
+  if (!topArtistsResponse.ok) return [];
+  const topArtistsJson = (await topArtistsResponse.json()) as { items?: Array<{ id?: string }> };
+  const seedArtists = (topArtistsJson.items ?? [])
+    .map((artist) => artist.id ?? "")
+    .filter(Boolean)
+    .slice(0, 5);
+  if (!seedArtists.length) return [];
+
+  const recommendationsResponse = await spotifyGet(
+    accessToken,
+    `/recommendations?limit=${Math.min(Math.max(limit, 1), 50)}&seed_artists=${seedArtists.join(",")}`,
+  );
+  if (!recommendationsResponse.ok) return [];
+  const recommendationsJson = (await recommendationsResponse.json()) as {
+    tracks?: Array<{ uri?: string }>;
+  };
+  return (recommendationsJson.tracks ?? []).map((track) => track.uri ?? "").filter(Boolean).slice(0, limit);
 }

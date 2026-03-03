@@ -9,6 +9,7 @@ import {
   parseDisplayUnit,
 } from "@/lib/display-unit";
 import { RangeFilter } from "@/components/RangeFilter";
+import { DashboardCustomizer } from "@/components/DashboardCustomizer";
 import { buildCollectionStats, entriesInRange } from "@/lib/stats";
 import { readHistoryEntries } from "@/lib/storage";
 import { resolveTimeRange } from "@/lib/time-range";
@@ -125,9 +126,13 @@ export default async function Home({ searchParams }: PageProps) {
           </span>
         </div>
       </section>
-
-      <RangeFilter selectedRange={range.preset} from={range.from} to={range.to} />
-      <p className="mt-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">Current range: {range.label}</p>
+      <DashboardCustomizer
+        sections={[
+          { id: "range", label: "Range Filter" },
+          { id: "stats", label: "Dashboard Stats" },
+          { id: "library", label: "Browse Library" },
+        ]}
+      />
 
       {syncState === "ok" ? (
         <p className="ui-soft-panel mt-4 border-emerald-400/40 px-3 py-2 text-sm text-emerald-200">
@@ -145,79 +150,86 @@ export default async function Home({ searchParams }: PageProps) {
         </p>
       ) : null}
 
-      <section className="ui-panel mt-6 p-5 sm:p-6">
-        <div className="mb-4 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Dashboard Stats</p>
-            <h2 className="mt-1 text-2xl font-bold">Full listening overview</h2>
+      <div id="dashboard-sections-root" className="mt-6 space-y-6">
+        <section data-section-id="range" className="space-y-3">
+          <RangeFilter selectedRange={range.preset} from={range.from} to={range.to} />
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">Current range: {range.label}</p>
+        </section>
+
+        <section data-section-id="stats" className="ui-panel p-5 sm:p-6">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Dashboard Stats</p>
+              <h2 className="mt-1 text-2xl font-bold">Full listening overview</h2>
+            </div>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-          <StatCard label="Plays" value={String(analyticsEntries.length)} />
-          <StatCard
-            label={`Listening (${unitLabel})`}
-            value={formatEstimatedDuration(totalSongHours, displayUnit, { hoursDecimals: 1 })}
-          />
-          <StatCard label="Avg Play Length" value={`${avgMinutes.toFixed(1)}m`} />
-          <StatCard label="Unique Songs" value={String(songStats.length)} />
-          <StatCard label="Unique Albums" value={String(albumStats.length)} />
-          <StatCard label="Unique Artists" value={String(artistStats.length)} />
-          <StatCard label="Unique Genres" value={String(genreStats.length)} />
-          <StatCard label="Song Time Share" value={formatEstimatedDuration(totalSongHours, displayUnit, { hoursDecimals: 1 })} />
-          <TopStatCard
-            label="Top Song"
-            value={songStats[0]?.name ?? "No data"}
-            sub={songStats[0] ? formatEstimatedDuration(songStats[0].totalHours, displayUnit) : "Import JSON"}
-            href={songStats[0] ? `/songs/${encodeURIComponent(songStats[0].id)}?${rangeQuery}` : undefined}
-          />
-          <TopStatCard
-            label="Top Album"
-            value={albumStats[0]?.name ?? "No data"}
-            sub={albumStats[0] ? formatEstimatedDuration(albumStats[0].totalHours, displayUnit) : "Import JSON"}
-            href={albumStats[0] ? `/albums/${encodeURIComponent(albumStats[0].id)}?${rangeQuery}` : undefined}
-          />
-          <TopStatCard
-            label="Top Artist"
-            value={artistStats[0]?.name ?? "No data"}
-            sub={artistStats[0] ? formatEstimatedDuration(artistStats[0].totalHours, displayUnit) : "Import JSON"}
-            href={artistStats[0] ? `/artists/${encodeURIComponent(artistStats[0].id)}?${rangeQuery}` : undefined}
-          />
-          <TopStatCard
-            label="Top Genre"
-            value={genreStats[0]?.name ?? "No data"}
-            sub={genreStats[0] ? formatEstimatedDuration(genreStats[0].totalHours, displayUnit) : "Import JSON"}
-            href={genreStats[0] ? `/genres/${encodeURIComponent(genreStats[0].id)}?${rangeQuery}` : undefined}
-          />
-          <StatCard label={`Albums (${unitLabel})`} value={formatEstimatedDuration(totalAlbumHours, displayUnit, { hoursDecimals: 1 })} />
-          <StatCard label={`Artists (${unitLabel})`} value={formatEstimatedDuration(totalArtistHours, displayUnit, { hoursDecimals: 1 })} />
-          <StatCard label={`Genres (${unitLabel})`} value={formatEstimatedDuration(totalGenreHours, displayUnit, { hoursDecimals: 1 })} />
-          <StatCard label="Auto Sync" value={autoSyncText} />
-        </div>
-      </section>
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+            <StatCard label="Plays" value={String(analyticsEntries.length)} />
+            <StatCard
+              label={`Listening (${unitLabel})`}
+              value={formatEstimatedDuration(totalSongHours, displayUnit, { hoursDecimals: 1 })}
+            />
+            <StatCard label="Avg Play Length" value={`${avgMinutes.toFixed(1)}m`} />
+            <StatCard label="Unique Songs" value={String(songStats.length)} />
+            <StatCard label="Unique Albums" value={String(albumStats.length)} />
+            <StatCard label="Unique Artists" value={String(artistStats.length)} />
+            <StatCard label="Unique Genres" value={String(genreStats.length)} />
+            <StatCard label="Song Time Share" value={formatEstimatedDuration(totalSongHours, displayUnit, { hoursDecimals: 1 })} />
+            <TopStatCard
+              label="Top Song"
+              value={songStats[0]?.name ?? "No data"}
+              sub={songStats[0] ? formatEstimatedDuration(songStats[0].totalHours, displayUnit) : "Import JSON"}
+              href={songStats[0] ? `/songs/${encodeURIComponent(songStats[0].id)}?${rangeQuery}` : undefined}
+            />
+            <TopStatCard
+              label="Top Album"
+              value={albumStats[0]?.name ?? "No data"}
+              sub={albumStats[0] ? formatEstimatedDuration(albumStats[0].totalHours, displayUnit) : "Import JSON"}
+              href={albumStats[0] ? `/albums/${encodeURIComponent(albumStats[0].id)}?${rangeQuery}` : undefined}
+            />
+            <TopStatCard
+              label="Top Artist"
+              value={artistStats[0]?.name ?? "No data"}
+              sub={artistStats[0] ? formatEstimatedDuration(artistStats[0].totalHours, displayUnit) : "Import JSON"}
+              href={artistStats[0] ? `/artists/${encodeURIComponent(artistStats[0].id)}?${rangeQuery}` : undefined}
+            />
+            <TopStatCard
+              label="Top Genre"
+              value={genreStats[0]?.name ?? "No data"}
+              sub={genreStats[0] ? formatEstimatedDuration(genreStats[0].totalHours, displayUnit) : "Import JSON"}
+              href={genreStats[0] ? `/genres/${encodeURIComponent(genreStats[0].id)}?${rangeQuery}` : undefined}
+            />
+            <StatCard label={`Albums (${unitLabel})`} value={formatEstimatedDuration(totalAlbumHours, displayUnit, { hoursDecimals: 1 })} />
+            <StatCard label={`Artists (${unitLabel})`} value={formatEstimatedDuration(totalArtistHours, displayUnit, { hoursDecimals: 1 })} />
+            <StatCard label={`Genres (${unitLabel})`} value={formatEstimatedDuration(totalGenreHours, displayUnit, { hoursDecimals: 1 })} />
+            <StatCard label="Auto Sync" value={autoSyncText} />
+          </div>
+        </section>
 
-      <section className="ui-panel mt-8 p-5">
-        <h2 className="text-xl font-bold">Browse your library</h2>
-        {!analyticsEntries.length && allEntries.length > 0 ? (
-          <p className="mt-2 text-sm text-[var(--muted)]">
-            No listening history found in this range. Try widening the date range or selecting All time.
-          </p>
-        ) : null}
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Link href={`/songs?${rangeQuery}`} className="ui-ghost-btn px-4 py-3 text-center text-sm">
-            Songs
-          </Link>
-          <Link href={`/albums?${rangeQuery}`} className="ui-ghost-btn px-4 py-3 text-center text-sm">
-            Albums
-          </Link>
-          <Link href={`/artists?${rangeQuery}`} className="ui-ghost-btn px-4 py-3 text-center text-sm">
-            Artists
-          </Link>
-          <Link href={`/genres?${rangeQuery}`} className="ui-ghost-btn px-4 py-3 text-center text-sm">
-            Genres
-          </Link>
-        </div>
-      </section>
+        <section data-section-id="library" className="ui-panel p-5">
+          <h2 className="text-xl font-bold">Browse your library</h2>
+          {!analyticsEntries.length && allEntries.length > 0 ? (
+            <p className="mt-2 text-sm text-[var(--muted)]">
+              No listening history found in this range. Try widening the date range or selecting All time.
+            </p>
+          ) : null}
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Link href={`/songs?${rangeQuery}`} className="ui-ghost-btn px-4 py-3 text-center text-sm">
+              Songs
+            </Link>
+            <Link href={`/albums?${rangeQuery}`} className="ui-ghost-btn px-4 py-3 text-center text-sm">
+              Albums
+            </Link>
+            <Link href={`/artists?${rangeQuery}`} className="ui-ghost-btn px-4 py-3 text-center text-sm">
+              Artists
+            </Link>
+            <Link href={`/genres?${rangeQuery}`} className="ui-ghost-btn px-4 py-3 text-center text-sm">
+              Genres
+            </Link>
+          </div>
+        </section>
+      </div>
     </main>
   );
 }

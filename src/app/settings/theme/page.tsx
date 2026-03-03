@@ -177,9 +177,9 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
           <Link href="/share" className="ui-primary-btn px-4 py-2 text-sm">
             Share My Stats
           </Link>
-          <button type="button" className="ui-ghost-btn px-4 py-2 text-sm">
+          <Link href="/playlists" className="ui-ghost-btn px-4 py-2 text-sm">
             Create Playlist Mixes
-          </button>
+          </Link>
           <Link href="/share?export=pdf" className="ui-ghost-btn inline-flex items-center px-4 py-2 text-sm">
             Export Report (PDF)
           </Link>
