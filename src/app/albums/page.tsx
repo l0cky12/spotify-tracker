@@ -2,8 +2,8 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { RangeFilter } from "@/components/RangeFilter";
-import { TrendChart } from "@/components/TrendChart";
 import { DISPLAY_UNIT_COOKIE, formatEstimatedDuration, parseDisplayUnit } from "@/lib/display-unit";
+import { resolveEntityMedia } from "@/lib/spotify";
 import { buildCollectionStats } from "@/lib/stats";
 import { readHistoryEntries } from "@/lib/storage";
 import { resolveTimeRange } from "@/lib/time-range";
@@ -37,6 +37,10 @@ export default async function AlbumsPage({ searchParams }: PageProps) {
   const albums = buildCollectionStats(entries, "albums", range).slice(0, 50);
   const totalHours = albums.reduce((sum, album) => sum + album.totalHours, 0);
   const totalPlays = albums.reduce((sum, album) => sum + album.playCount, 0);
+  const mediaRows = await Promise.all(
+    albums.map(async (album) => [album.id, await resolveEntityMedia({ kind: "albums", name: album.name, subtitle: album.subtitle })] as const),
+  );
+  const mediaById = new Map(mediaRows);
 
   return (
     <main className="w-full px-4 py-8 pt-20 md:px-8 lg:pl-[19rem] lg:pr-8 lg:pt-8">
@@ -75,9 +79,12 @@ export default async function AlbumsPage({ searchParams }: PageProps) {
                     Listened: {formatEstimatedDuration(album.totalHours, displayUnit)} - Plays: {album.playCount} - Avg length: {album.avgMinutes.toFixed(1)}m
                   </p>
                 </div>
-                <div className="w-full rounded-xl border border-[var(--stroke)] bg-[var(--panel-strong)] p-2 md:w-72">
-                  <TrendChart points={album.trend} />
-                </div>
+                <MediaPreview
+                  title={album.name}
+                  imageUrl={mediaById.get(album.id)?.imageUrl}
+                  linkUrl={mediaById.get(album.id)?.spotifyUrl}
+                  info={mediaById.get(album.id)?.info}
+                />
               </div>
             </article>
           ))
@@ -97,5 +104,40 @@ function InfoTile({ label, value }: { label: string; value: string }) {
       <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">{label}</p>
       <p className="mt-2 text-3xl font-bold">{value}</p>
     </article>
+  );
+}
+
+function MediaPreview({
+  title,
+  imageUrl,
+  linkUrl,
+  info,
+}: {
+  title: string;
+  imageUrl?: string;
+  linkUrl?: string;
+  info?: string;
+}) {
+  return (
+    <div className="w-full rounded-xl border border-[var(--stroke)] bg-[var(--panel-strong)] p-2 md:w-72">
+      <div className="flex items-center gap-3">
+        {imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={imageUrl} alt={title} className="h-16 w-16 rounded-lg object-cover" />
+        ) : (
+          <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-[var(--panel)] text-xs text-[var(--muted)]">No Art</div>
+        )}
+        <div className="min-w-0">
+          {linkUrl ? (
+            <a href={linkUrl} target="_blank" rel="noreferrer" className="truncate text-sm font-semibold hover:text-[var(--accent)]">
+              Open on Spotify
+            </a>
+          ) : (
+            <p className="truncate text-sm font-semibold text-[var(--muted)]">No Spotify link</p>
+          )}
+          <p className="mt-1 text-xs text-[var(--muted)]">{info || "Album artwork and release info when available."}</p>
+        </div>
+      </div>
+    </div>
   );
 }

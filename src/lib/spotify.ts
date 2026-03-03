@@ -2,6 +2,7 @@ import { HistoryEntry } from "./types";
 
 const SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token";
 const SPOTIFY_API_BASE = "https://api.spotify.com/v1";
+const mediaCache = new Map<string, Promise<ResolvedMedia | null>>();
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -121,6 +122,12 @@ export type CurrentlyPlaying = {
   progressMs: number;
   durationMs: number;
   isPlaying: boolean;
+};
+
+export type ResolvedMedia = {
+  imageUrl: string;
+  spotifyUrl: string;
+  info: string;
 };
 
 export async function fetchCurrentlyPlaying(accessToken: string): Promise<CurrentlyPlaying | null> {
@@ -266,4 +273,121 @@ export function buildLoginUrl() {
   });
 
   return `https://accounts.spotify.com/authorize?${params.toString()}`;
+}
+
+async function searchSpotify(
+  accessToken: string,
+  query: string,
+  type: "track" | "album" | "artist",
+): Promise<unknown | null> {
+  const response = await fetch(
+    `${SPOTIFY_API_BASE}/search?q=${encodeURIComponent(query)}&type=${type}&limit=1`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
+    },
+  );
+  if (!response.ok) return null;
+  return response.json();
+}
+
+function buildCacheKey(kind: "songs" | "albums" | "artists", name: string, subtitle?: string): string {
+  return `${kind}:${name.trim().toLowerCase()}::${(subtitle ?? "").trim().toLowerCase()}`;
+}
+
+export async function resolveEntityMedia(params: {
+  kind: "songs" | "albums" | "artists";
+  name: string;
+  subtitle?: string;
+}): Promise<ResolvedMedia | null> {
+  const key = buildCacheKey(params.kind, params.name, params.subtitle);
+  if (!mediaCache.has(key)) {
+    mediaCache.set(
+      key,
+      (async () => {
+        try {
+          const accessToken = await requestClientCredentialsToken();
+          if (params.kind === "songs") {
+            const query = `track:${params.name} artist:${params.subtitle ?? ""}`.trim();
+            const json = (await searchSpotify(accessToken, query, "track")) as
+              | {
+                  tracks?: {
+                    items?: Array<{
+                      external_urls?: { spotify?: string };
+                      artists?: Array<{ name?: string }>;
+                      album?: {
+                        name?: string;
+                        release_date?: string;
+                        images?: Array<{ url?: string }>;
+                      };
+                    }>;
+                  };
+                }
+              | null;
+            const item = json?.tracks?.items?.[0];
+            if (!item) return null;
+            return {
+              imageUrl: item.album?.images?.[0]?.url ?? "",
+              spotifyUrl: item.external_urls?.spotify ?? "",
+              info: [item.artists?.map((a) => a.name).filter(Boolean).join(", "), item.album?.release_date]
+                .filter(Boolean)
+                .join(" - "),
+            };
+          }
+
+          if (params.kind === "albums") {
+            const query = `album:${params.name} artist:${params.subtitle ?? ""}`.trim();
+            const json = (await searchSpotify(accessToken, query, "album")) as
+              | {
+                  albums?: {
+                    items?: Array<{
+                      external_urls?: { spotify?: string };
+                      release_date?: string;
+                      total_tracks?: number;
+                      images?: Array<{ url?: string }>;
+                    }>;
+                  };
+                }
+              | null;
+            const item = json?.albums?.items?.[0];
+            if (!item) return null;
+            return {
+              imageUrl: item.images?.[0]?.url ?? "",
+              spotifyUrl: item.external_urls?.spotify ?? "",
+              info: [item.release_date, item.total_tracks ? `${item.total_tracks} tracks` : ""]
+                .filter(Boolean)
+                .join(" - "),
+            };
+          }
+
+          const query = `artist:${params.name}`;
+          const json = (await searchSpotify(accessToken, query, "artist")) as
+            | {
+                artists?: {
+                  items?: Array<{
+                    external_urls?: { spotify?: string };
+                    followers?: { total?: number };
+                    genres?: string[];
+                    images?: Array<{ url?: string }>;
+                  }>;
+                };
+              }
+            | null;
+          const item = json?.artists?.items?.[0];
+          if (!item) return null;
+          return {
+            imageUrl: item.images?.[0]?.url ?? "",
+            spotifyUrl: item.external_urls?.spotify ?? "",
+            info: [item.genres?.[0], item.followers?.total ? `${item.followers.total.toLocaleString()} followers` : ""]
+              .filter(Boolean)
+              .join(" - "),
+          };
+        } catch {
+          return null;
+        }
+      })(),
+    );
+  }
+
+  return mediaCache.get(key) ?? null;
 }

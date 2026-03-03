@@ -2,7 +2,6 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { RangeFilter } from "@/components/RangeFilter";
-import { TrendChart } from "@/components/TrendChart";
 import { DISPLAY_UNIT_COOKIE, formatEstimatedDuration, parseDisplayUnit } from "@/lib/display-unit";
 import { buildCollectionStats } from "@/lib/stats";
 import { readHistoryEntries } from "@/lib/storage";
@@ -77,8 +76,12 @@ export default async function GenresPage({ searchParams }: PageProps) {
                     Listened: {formatEstimatedDuration(genre.totalHours, displayUnit)} - Plays: {genre.playCount} - Avg length: {genre.avgMinutes.toFixed(1)}m
                   </p>
                 </div>
-                <div className="w-full rounded-xl border border-[var(--stroke)] bg-[var(--panel-strong)] p-2 md:w-72">
-                  <TrendChart points={genre.trend} />
+                <div className="w-full rounded-xl border border-[var(--stroke)] bg-[var(--panel-strong)] p-3 md:w-72">
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--muted)]">Genre Profile</p>
+                  <p className="mt-2 text-sm font-semibold text-[var(--accent)]">{genre.name}</p>
+                  <p className="mt-1 text-xs text-[var(--muted)]">
+                    Plays {genre.playCount} - Avg {genre.avgMinutes.toFixed(1)}m
+                  </p>
                 </div>
               </div>
             </article>

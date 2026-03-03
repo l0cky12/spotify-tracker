@@ -4,6 +4,7 @@ import { Nav } from "@/components/Nav";
 import { RangeFilter } from "@/components/RangeFilter";
 import { TrendChart } from "@/components/TrendChart";
 import { buildSongRelatedTracks } from "@/lib/detail-stats";
+import { resolveEntityMedia } from "@/lib/spotify";
 import { DISPLAY_UNIT_COOKIE, formatEstimatedDuration, parseDisplayUnit } from "@/lib/display-unit";
 import { buildCollectionStats } from "@/lib/stats";
 import { readHistoryEntries } from "@/lib/storage";
@@ -42,6 +43,7 @@ export default async function SongDetailPage({ params, searchParams }: PageProps
   const songs = buildCollectionStats(entries, "songs", range);
   const song = songs.find((entry) => entry.id === songId);
   const relatedTracks = buildSongRelatedTracks(entries, range, songId);
+  const media = song ? await resolveEntityMedia({ kind: "songs", name: song.name, subtitle: song.subtitle }) : null;
 
   return (
     <main className="w-full px-4 py-8 pt-20 md:px-8 lg:pl-[19rem] lg:pr-8 lg:pt-8">
@@ -65,8 +67,24 @@ export default async function SongDetailPage({ params, searchParams }: PageProps
       ) : (
         <>
           <article className="ui-panel mt-6 p-5">
-            <p className="text-2xl font-semibold">{song.name}</p>
-            <p className="text-sm text-[var(--muted)]">{song.subtitle}</p>
+            <div className="flex flex-col gap-4 md:flex-row md:items-center">
+              {media?.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={media.imageUrl} alt={song.name} className="h-24 w-24 rounded-xl object-cover" />
+              ) : (
+                <div className="flex h-24 w-24 items-center justify-center rounded-xl bg-[var(--panel-strong)] text-xs text-[var(--muted)]">No Art</div>
+              )}
+              <div>
+                <p className="text-2xl font-semibold">{song.name}</p>
+                <p className="text-sm text-[var(--muted)]">{song.subtitle}</p>
+                {media?.info ? <p className="mt-1 text-xs text-[var(--muted)]">{media.info}</p> : null}
+                {media?.spotifyUrl ? (
+                  <a href={media.spotifyUrl} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs text-[var(--accent)] hover:underline">
+                    Open on Spotify
+                  </a>
+                ) : null}
+              </div>
+            </div>
             <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
               <Stat label="Listened" value={formatEstimatedDuration(song.totalHours, displayUnit)} />
               <Stat label="Play count" value={String(song.playCount)} />

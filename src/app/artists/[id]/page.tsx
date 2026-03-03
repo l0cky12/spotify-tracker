@@ -4,6 +4,7 @@ import { Nav } from "@/components/Nav";
 import { RangeFilter } from "@/components/RangeFilter";
 import { TrendChart } from "@/components/TrendChart";
 import { buildArtistRelatedTracks } from "@/lib/detail-stats";
+import { resolveEntityMedia } from "@/lib/spotify";
 import { DISPLAY_UNIT_COOKIE, formatEstimatedDuration, parseDisplayUnit } from "@/lib/display-unit";
 import { buildCollectionStats } from "@/lib/stats";
 import { readHistoryEntries } from "@/lib/storage";
@@ -43,6 +44,7 @@ export default async function ArtistDetailPage({ params, searchParams }: PagePro
 
   const artist = artists.find((entry) => entry.id === artistId);
   const relatedTracks = artist ? buildArtistRelatedTracks(entries, range, artistId) : [];
+  const media = artist ? await resolveEntityMedia({ kind: "artists", name: artist.name }) : null;
 
   return (
     <main className="w-full px-4 py-8 pt-20 md:px-8 lg:pl-[19rem] lg:pr-8 lg:pt-8">
@@ -66,7 +68,23 @@ export default async function ArtistDetailPage({ params, searchParams }: PagePro
       ) : (
         <>
           <article className="ui-panel mt-6 p-5">
-            <p className="text-2xl font-semibold">{artist.name}</p>
+            <div className="flex flex-col gap-4 md:flex-row md:items-center">
+              {media?.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={media.imageUrl} alt={artist.name} className="h-24 w-24 rounded-full object-cover" />
+              ) : (
+                <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[var(--panel-strong)] text-xs text-[var(--muted)]">No Pic</div>
+              )}
+              <div>
+                <p className="text-2xl font-semibold">{artist.name}</p>
+                {media?.info ? <p className="mt-1 text-xs text-[var(--muted)]">{media.info}</p> : null}
+                {media?.spotifyUrl ? (
+                  <a href={media.spotifyUrl} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs text-[var(--accent)] hover:underline">
+                    Open on Spotify
+                  </a>
+                ) : null}
+              </div>
+            </div>
             <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
               <Stat label="Listened" value={formatEstimatedDuration(artist.totalHours, displayUnit)} />
               <Stat label="Play count" value={String(artist.playCount)} />
