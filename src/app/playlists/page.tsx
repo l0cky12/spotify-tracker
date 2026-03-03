@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { Nav } from "@/components/Nav";
 
 export const dynamic = "force-dynamic";
@@ -12,12 +13,15 @@ function firstParam(value: string | string[] | undefined): string | undefined {
 }
 
 export default async function PlaylistsPage({ searchParams }: PageProps) {
+  const cookieStore = await cookies();
+  const hasRefreshToken = Boolean(cookieStore.get("spotify_refresh_token")?.value);
   const params = (await searchParams) ?? {};
   const created = firstParam(params.created);
   const type = firstParam(params.type);
   const count = firstParam(params.count);
   const reason = firstParam(params.reason);
   const playlistUrl = firstParam(params.playlistUrl);
+  const authState = firstParam(params.auth);
 
   return (
     <main className="w-full px-4 py-8 pt-20 md:px-8 lg:pl-[19rem] lg:pr-8 lg:pt-8">
@@ -45,6 +49,20 @@ export default async function PlaylistsPage({ searchParams }: PageProps) {
       {created === "failed" ? (
         <p className="ui-soft-panel mt-4 border-rose-500/40 px-3 py-2 text-sm text-rose-200">
           Playlist creation failed{reason ? `: ${reason}` : "."}
+          {authState === "required" || authState === "reconnect" || !hasRefreshToken ? (
+            <Link href="/api/auth/login" className="ml-2 underline">
+              Connect/Reconnect Spotify
+            </Link>
+          ) : null}
+        </p>
+      ) : null}
+
+      {!hasRefreshToken ? (
+        <p className="ui-soft-panel mt-4 border-amber-500/40 px-3 py-2 text-sm text-amber-200">
+          Spotify is not connected.
+          <Link href="/api/auth/login" className="ml-2 underline">
+            Connect Spotify
+          </Link>
         </p>
       ) : null}
 

@@ -29,6 +29,7 @@ export async function POST(request: Request) {
     return redirectWith(redirectTo, {
       created: "failed",
       reason: "Connect Spotify first.",
+      auth: "required",
     });
   }
 
@@ -78,9 +79,15 @@ export async function POST(request: Request) {
       playlistUrl: playlist.externalUrl,
     });
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Playlist creation failed";
+    const needsReconnect =
+      message.toLowerCase().includes("insufficient") ||
+      message.toLowerCase().includes("permissions") ||
+      message.toLowerCase().includes("scope");
     return redirectWith(redirectTo, {
       created: "failed",
-      reason: error instanceof Error ? error.message.slice(0, 180) : "Playlist creation failed",
+      reason: message.slice(0, 180),
+      auth: needsReconnect ? "reconnect" : "none",
     });
   }
 }

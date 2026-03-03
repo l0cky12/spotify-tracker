@@ -155,24 +155,8 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
       </section>
 
       <section className="ui-panel mt-6 p-5">
-        <h2 className="text-lg font-semibold">Advanced Features</h2>
-        <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-2">
-          {[
-            "Track Context: View playlist, artist and album info with clickable URLs.",
-            "Skip Detection: Identify exactly when and how long a song was played.",
-            "Release Date: The track's official album release date.",
-            "Album Color: The dominant color of the album artwork, with modes for perceptual grouping or a pure hue gradient.",
-            "Dedicated Playlist Creation - Generate top tracks, new releases, discovery mixes, and more.",
-            "Detailed Report: After converting your Local Files, view a report of which tracks were found and which could not be matched.",
-            "Export Report: Download the detailed conversion report as a PDF file for your records.",
-            "Multiple data providers: stats.fm (recommended), Last.fm, or local on-device tracking.",
-            "Customizable dashboard: drag-and-drop layout, section visibility, accent theming.",
-          ].map((item) => (
-            <article key={item} className="rounded-xl border border-[var(--stroke)] bg-[var(--panel-soft)] p-3 text-sm text-[var(--muted)]">
-              {item}
-            </article>
-          ))}
-        </div>
+        <h2 className="text-lg font-semibold">Quick Actions</h2>
+        <p className="mt-1 text-sm text-[var(--muted)]">Open sharing, playlist creation, and PDF export tools.</p>
         <div className="mt-4 flex flex-wrap gap-3">
           <Link href="/share" className="ui-primary-btn px-4 py-2 text-sm">
             Share My Stats

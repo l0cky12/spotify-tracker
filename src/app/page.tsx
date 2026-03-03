@@ -128,29 +128,32 @@ export default async function Home({ searchParams }: PageProps) {
       </section>
       <DashboardCustomizer
         sections={[
+          { id: "sync-status", label: "Sync Status" },
           { id: "range", label: "Range Filter" },
           { id: "stats", label: "Dashboard Stats" },
           { id: "library", label: "Browse Library" },
         ]}
       />
 
-      {syncState === "ok" ? (
-        <p className="ui-soft-panel mt-4 border-emerald-400/40 px-3 py-2 text-sm text-emerald-200">
-          Sync completed: {syncCount ?? "0"} recent plays imported.
-        </p>
-      ) : null}
-      {syncError === "auth-required" ? (
-        <p className="ui-soft-panel mt-4 border-rose-500/50 px-3 py-2 text-sm text-rose-200">
-          Sync failed: connect Spotify first from Settings.
-        </p>
-      ) : null}
-      {syncError === "sync-failed" ? (
-        <p className="ui-soft-panel mt-4 border-rose-500/50 px-3 py-2 text-sm text-rose-200">
-          Sync failed{syncReason ? `: ${syncReason}` : "."}
-        </p>
-      ) : null}
-
       <div id="dashboard-sections-root" className="mt-6 space-y-6">
+        <section data-section-id="sync-status" className="space-y-2">
+          {syncState === "ok" ? (
+            <p className="ui-soft-panel border-emerald-400/40 px-3 py-2 text-sm text-emerald-200">
+              Sync completed: {syncCount ?? "0"} recent plays imported.
+            </p>
+          ) : null}
+          {syncError === "auth-required" ? (
+            <p className="ui-soft-panel border-rose-500/50 px-3 py-2 text-sm text-rose-200">
+              Sync failed: connect Spotify first from Settings.
+            </p>
+          ) : null}
+          {syncError === "sync-failed" ? (
+            <p className="ui-soft-panel border-rose-500/50 px-3 py-2 text-sm text-rose-200">
+              Sync failed{syncReason ? `: ${syncReason}` : "."}
+            </p>
+          ) : null}
+        </section>
+
         <section data-section-id="range" className="space-y-3">
           <RangeFilter selectedRange={range.preset} from={range.from} to={range.to} />
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">Current range: {range.label}</p>
@@ -164,7 +167,7 @@ export default async function Home({ searchParams }: PageProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <div id="dashboard-stats-grid" className="grid grid-cols-1 gap-4 xl:grid-cols-2">
             <StatCard label="Plays" value={String(analyticsEntries.length)} />
             <StatCard
               label={`Listening (${unitLabel})`}
@@ -236,7 +239,7 @@ export default async function Home({ searchParams }: PageProps) {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <article className="group relative overflow-hidden rounded-2xl border border-[var(--stroke)] bg-[linear-gradient(135deg,color-mix(in_oklab,var(--panel-soft)_88%,transparent),color-mix(in_oklab,var(--panel)_82%,transparent))] p-4 shadow-[0_10px_24px_rgba(0,0,0,0.25)] sm:p-5">
+    <article className="dashboard-card group relative overflow-hidden rounded-2xl border border-[var(--stroke)] bg-[linear-gradient(135deg,color-mix(in_oklab,var(--panel-soft)_88%,transparent),color-mix(in_oklab,var(--panel)_82%,transparent))] p-4 shadow-[0_10px_24px_rgba(0,0,0,0.25)] sm:p-5">
       <div className="pointer-events-none absolute -right-8 -top-10 h-24 w-24 rounded-full bg-[var(--glow-a)] blur-2xl transition group-hover:scale-110" />
       <div className="relative flex items-center justify-between gap-6">
         <p className="rounded-full border border-[var(--stroke)] bg-[var(--panel-strong)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
@@ -260,7 +263,7 @@ function TopStatCard({
   href?: string;
 }) {
   const card = (
-    <article className="group relative overflow-hidden rounded-2xl border border-[var(--stroke)] bg-[linear-gradient(135deg,color-mix(in_oklab,var(--panel-soft)_88%,transparent),color-mix(in_oklab,var(--panel)_82%,transparent))] p-4 shadow-[0_10px_24px_rgba(0,0,0,0.25)] sm:p-5">
+    <article className="dashboard-card group relative overflow-hidden rounded-2xl border border-[var(--stroke)] bg-[linear-gradient(135deg,color-mix(in_oklab,var(--panel-soft)_88%,transparent),color-mix(in_oklab,var(--panel)_82%,transparent))] p-4 shadow-[0_10px_24px_rgba(0,0,0,0.25)] sm:p-5">
       <div className="pointer-events-none absolute -left-8 -top-10 h-24 w-24 rounded-full bg-[var(--glow-b)] blur-2xl transition group-hover:scale-110" />
       <div className="relative flex items-start justify-between gap-6">
         <p className="rounded-full border border-[var(--stroke)] bg-[var(--panel-strong)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">

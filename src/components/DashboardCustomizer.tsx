@@ -14,6 +14,11 @@ type Props = {
 const STORAGE_ORDER = "spotify-tracker-dashboard-order";
 const STORAGE_VISIBILITY = "spotify-tracker-dashboard-visibility";
 const STORAGE_ACCENT = "spotify-tracker-dashboard-accent";
+const STORAGE_DENSITY = "spotify-tracker-dashboard-density";
+const STORAGE_COLS = "spotify-tracker-dashboard-stats-cols";
+const STORAGE_GLOW = "spotify-tracker-dashboard-glow";
+
+type Density = "comfortable" | "compact";
 
 function applyAccent(accent: string) {
   document.documentElement.setAttribute("data-accent", accent);
@@ -47,8 +52,21 @@ function applyVisibility(visibility: Record<string, boolean>) {
   }
 }
 
+function applyDensity(density: Density) {
+  document.documentElement.setAttribute("data-dashboard-density", density);
+}
+
+function applyStatsColumns(columns: number) {
+  document.documentElement.style.setProperty("--dashboard-stats-cols", String(columns));
+}
+
+function applyGlow(enabled: boolean) {
+  document.documentElement.setAttribute("data-dashboard-glow", enabled ? "on" : "off");
+}
+
 export function DashboardCustomizer({ sections }: Props) {
   const defaultOrder = useMemo(() => sections.map((section) => section.id), [sections]);
+  const [open, setOpen] = useState(false);
   const [order, setOrder] = useState<string[]>(() => {
     if (typeof window === "undefined") return defaultOrder;
     const storedOrderRaw = window.localStorage.getItem(STORAGE_ORDER);
@@ -68,13 +86,29 @@ export function DashboardCustomizer({ sections }: Props) {
   const [accent, setAccent] = useState(() =>
     typeof window === "undefined" ? "spotify" : window.localStorage.getItem(STORAGE_ACCENT) || "spotify",
   );
+  const [density, setDensity] = useState<Density>(() =>
+    typeof window === "undefined"
+      ? "comfortable"
+      : ((window.localStorage.getItem(STORAGE_DENSITY) as Density | null) ?? "comfortable"),
+  );
+  const [statsColumns, setStatsColumns] = useState<number>(() => {
+    if (typeof window === "undefined") return 2;
+    const raw = Number(window.localStorage.getItem(STORAGE_COLS) || "2");
+    return [1, 2, 3].includes(raw) ? raw : 2;
+  });
+  const [glow, setGlow] = useState<boolean>(() =>
+    typeof window === "undefined" ? true : window.localStorage.getItem(STORAGE_GLOW) !== "off",
+  );
   const [dragged, setDragged] = useState<string | null>(null);
 
   useEffect(() => {
     applyAccent(accent);
     applyLayout(order);
     applyVisibility(visibility);
-  }, [accent, order, visibility]);
+    applyDensity(density);
+    applyStatsColumns(statsColumns);
+    applyGlow(glow);
+  }, [accent, density, glow, order, statsColumns, visibility]);
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_ORDER, JSON.stringify(order));
@@ -91,72 +125,158 @@ export function DashboardCustomizer({ sections }: Props) {
     applyAccent(accent);
   }, [accent]);
 
-  return (
-    <section className="ui-panel mt-6 p-5">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Customizable Dashboard</p>
-      <h2 className="mt-1 text-xl font-bold">Layout and Theme Controls</h2>
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_DENSITY, density);
+    applyDensity(density);
+  }, [density]);
 
-      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Drag-And-Drop Layout</p>
-          <div className="space-y-2">
-            {order.map((id) => {
-              const item = sections.find((section) => section.id === id);
-              if (!item) return null;
-              return (
-                <div
-                  key={id}
-                  draggable
-                  onDragStart={() => setDragged(id)}
-                  onDragOver={(event) => event.preventDefault()}
-                  onDrop={() => {
-                    if (!dragged || dragged === id) return;
-                    const next = [...order];
-                    const from = next.indexOf(dragged);
-                    const to = next.indexOf(id);
-                    if (from < 0 || to < 0) return;
-                    next.splice(from, 1);
-                    next.splice(to, 0, dragged);
-                    setOrder(next);
-                    setDragged(null);
-                  }}
-                  className="flex cursor-move items-center justify-between rounded-xl border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm"
-                >
-                  <span>{item.label}</span>
-                  <label className="flex items-center gap-2 text-xs text-[var(--muted)]">
-                    <input
-                      type="checkbox"
-                      checked={visibility[id] ?? true}
-                      onChange={(event) =>
-                        setVisibility((current) => ({
-                          ...current,
-                          [id]: event.target.checked,
-                        }))
-                      }
-                    />
-                    Visible
-                  </label>
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_COLS, String(statsColumns));
+    applyStatsColumns(statsColumns);
+  }, [statsColumns]);
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_GLOW, glow ? "on" : "off");
+    applyGlow(glow);
+  }, [glow]);
+
+  const resetDefaults = () => {
+    const defaults = Object.fromEntries(sections.map((section) => [section.id, true]));
+    setOrder(defaultOrder);
+    setVisibility(defaults);
+    setAccent("spotify");
+    setDensity("comfortable");
+    setStatsColumns(2);
+    setGlow(true);
+  };
+
+  return (
+    <>
+      <div className="mt-4 flex justify-end">
+        <button type="button" onClick={() => setOpen(true)} className="ui-primary-btn px-4 py-2 text-sm">
+          Customize Dashboard
+        </button>
+      </div>
+
+      {open ? (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4">
+          <div className="ui-panel max-h-[88vh] w-full max-w-4xl overflow-auto p-5 sm:p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Customizable Dashboard</p>
+                <h2 className="mt-1 text-xl font-bold">Layout, Visibility, and Accent Controls</h2>
+              </div>
+              <button type="button" onClick={() => setOpen(false)} className="ui-ghost-btn px-3 py-1.5 text-sm">
+                Close
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Drag-And-Drop Layout</p>
+                <div className="space-y-2">
+                  {order.map((id) => {
+                    const item = sections.find((section) => section.id === id);
+                    if (!item) return null;
+                    return (
+                      <div
+                        key={id}
+                        draggable
+                        onDragStart={() => setDragged(id)}
+                        onDragOver={(event) => event.preventDefault()}
+                        onDrop={() => {
+                          if (!dragged || dragged === id) return;
+                          const next = [...order];
+                          const from = next.indexOf(dragged);
+                          const to = next.indexOf(id);
+                          if (from < 0 || to < 0) return;
+                          next.splice(from, 1);
+                          next.splice(to, 0, dragged);
+                          setOrder(next);
+                          setDragged(null);
+                        }}
+                        className="flex cursor-move items-center justify-between rounded-xl border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm"
+                      >
+                        <span>{item.label}</span>
+                        <label className="flex items-center gap-2 text-xs text-[var(--muted)]">
+                          <input
+                            type="checkbox"
+                            checked={visibility[id] ?? true}
+                            onChange={(event) =>
+                              setVisibility((current) => ({
+                                ...current,
+                                [id]: event.target.checked,
+                              }))
+                            }
+                          />
+                          Visible
+                        </label>
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Accent Theme</p>
+                  <select
+                    value={accent}
+                    onChange={(event) => setAccent(event.target.value)}
+                    className="w-full rounded-xl border border-[var(--stroke)] bg-[var(--panel-strong)] px-3 py-2.5 text-sm"
+                  >
+                    <option value="spotify">Spotify Green</option>
+                    <option value="ocean">Ocean Blue</option>
+                    <option value="sunset">Sunset Orange</option>
+                    <option value="rose">Rose Red</option>
+                  </select>
+                </div>
+
+                <div>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Stats Columns (Desktop)</p>
+                  <div className="flex gap-2">
+                    {[1, 2, 3].map((columns) => (
+                      <button
+                        key={columns}
+                        type="button"
+                        onClick={() => setStatsColumns(columns)}
+                        className={`rounded-xl border px-3 py-2 text-sm ${
+                          statsColumns === columns
+                            ? "border-[var(--accent)] bg-[var(--panel-strong)]"
+                            : "border-[var(--stroke)] bg-[var(--panel-soft)]"
+                        }`}
+                      >
+                        {columns}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Card Density</p>
+                  <select
+                    value={density}
+                    onChange={(event) => setDensity(event.target.value as Density)}
+                    className="w-full rounded-xl border border-[var(--stroke)] bg-[var(--panel-strong)] px-3 py-2.5 text-sm"
+                  >
+                    <option value="comfortable">Comfortable</option>
+                    <option value="compact">Compact</option>
+                  </select>
+                </div>
+
+                <label className="flex items-center gap-2 text-sm text-[var(--muted)]">
+                  <input type="checkbox" checked={glow} onChange={(event) => setGlow(event.target.checked)} />
+                  Enable glow effects
+                </label>
+
+                <button type="button" onClick={resetDefaults} className="ui-ghost-btn px-4 py-2 text-sm">
+                  Reset Defaults
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-
-        <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Accent Theming</p>
-          <select
-            value={accent}
-            onChange={(event) => setAccent(event.target.value)}
-            className="w-full rounded-xl border border-[var(--stroke)] bg-[var(--panel-strong)] px-3 py-2.5 text-sm"
-          >
-            <option value="spotify">Spotify Green</option>
-            <option value="ocean">Ocean Blue</option>
-            <option value="sunset">Sunset Orange</option>
-            <option value="rose">Rose Red</option>
-          </select>
-          <p className="mt-2 text-xs text-[var(--muted)]">Preferences are saved locally for this browser.</p>
-        </div>
-      </div>
-    </section>
+      ) : null}
+    </>
   );
 }
