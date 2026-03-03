@@ -107,7 +107,7 @@ export function Nav() {
                 : "text-[var(--text)] hover:bg-[var(--panel-soft)]"
             }`}
           >
-            Theme Settings
+            Settings
           </Link>
         </div>
       </nav>

@@ -35,21 +35,34 @@ export default async function SongsPage({ searchParams }: PageProps) {
 
   const entries = await readHistoryEntries();
   const songs = buildCollectionStats(entries, "songs", range).slice(0, 50);
+  const totalHours = songs.reduce((sum, song) => sum + song.totalHours, 0);
+  const totalPlays = songs.reduce((sum, song) => sum + song.playCount, 0);
 
   return (
     <main className="w-full px-4 py-8 pt-20 md:px-8 lg:pl-[19rem] lg:pr-8 lg:pt-8">
       <Nav />
-      <header className="ui-panel mb-4 p-5">
-        <p className="text-xs uppercase tracking-[0.2em] text-[var(--accent)]">Library</p>
+      <header className="ui-panel mb-4 p-6">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--accent)]">Library</p>
         <h1 className="mt-2 text-3xl font-bold">Songs</h1>
       </header>
       <RangeFilter selectedRange={range.preset} from={range.from} to={range.to} />
       <p className="mt-3 text-xs uppercase tracking-wide text-[var(--muted)]">Range: {range.label}</p>
+
+      <section className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <InfoTile label="Tracked Songs" value={String(songs.length)} />
+        <InfoTile label={`Listening (${displayUnit})`} value={formatEstimatedDuration(totalHours, displayUnit, { hoursDecimals: 1 })} />
+        <InfoTile label="Total Plays" value={String(totalPlays)} />
+      </section>
+
       <div className="mt-6 space-y-4">
         {songs.length ? (
           songs.map((song) => (
-            <article key={song.id} className="ui-panel p-4">
-              <div className="flex flex-col gap-4 md:flex-row md:items-center">
+            <article
+              key={song.id}
+              className="group relative overflow-hidden rounded-2xl border border-[var(--stroke)] bg-[linear-gradient(135deg,color-mix(in_oklab,var(--panel-soft)_88%,transparent),color-mix(in_oklab,var(--panel)_82%,transparent))] p-4 shadow-[0_10px_24px_rgba(0,0,0,0.25)]"
+            >
+              <div className="pointer-events-none absolute -right-8 -top-10 h-24 w-24 rounded-full bg-[var(--glow-a)] blur-2xl transition group-hover:scale-110" />
+              <div className="relative flex flex-col gap-4 md:flex-row md:items-center">
                 <div className="min-w-0 flex-1">
                   <Link
                     href={`/songs/${encodeURIComponent(song.id)}?${rangeQuery}`}
@@ -57,12 +70,12 @@ export default async function SongsPage({ searchParams }: PageProps) {
                   >
                     #{song.currentRank} {song.name}
                   </Link>
-                  <p className="text-sm text-[var(--muted)]">{song.subtitle}</p>
-                  <p className="text-xs text-[var(--muted)]">
-                    Listened: {formatEstimatedDuration(song.totalHours, displayUnit)} • Plays: {song.playCount} • Avg length: {song.avgMinutes.toFixed(1)}m
+                  <p className="mt-1 text-sm text-[var(--muted)]">{song.subtitle}</p>
+                  <p className="mt-2 text-xs text-[var(--muted)]">
+                    Listened: {formatEstimatedDuration(song.totalHours, displayUnit)} - Plays: {song.playCount} - Avg length: {song.avgMinutes.toFixed(1)}m
                   </p>
                 </div>
-                <div className="w-full md:w-72">
+                <div className="w-full rounded-xl border border-[var(--stroke)] bg-[var(--panel-strong)] p-2 md:w-72">
                   <TrendChart points={song.trend} />
                 </div>
               </div>
@@ -75,5 +88,14 @@ export default async function SongsPage({ searchParams }: PageProps) {
         )}
       </div>
     </main>
+  );
+}
+
+function InfoTile({ label, value }: { label: string; value: string }) {
+  return (
+    <article className="rounded-2xl border border-[var(--stroke)] bg-[var(--panel-soft)] p-4">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">{label}</p>
+      <p className="mt-2 text-3xl font-bold">{value}</p>
+    </article>
   );
 }
