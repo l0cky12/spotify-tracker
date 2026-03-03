@@ -130,6 +130,19 @@ export type ResolvedMedia = {
   info: string;
 };
 
+export type TrackContext = {
+  trackName: string;
+  artistName: string;
+  albumName: string;
+  releaseDate: string;
+  imageUrl: string;
+  trackUrl: string;
+  artistUrl: string;
+  albumUrl: string;
+  playlistName: string;
+  playlistUrl: string;
+};
+
 export async function fetchCurrentlyPlaying(accessToken: string): Promise<CurrentlyPlaying | null> {
   const response = await fetch(`${SPOTIFY_API_BASE}/me/player/currently-playing`, {
     headers: {
@@ -390,4 +403,64 @@ export async function resolveEntityMedia(params: {
   }
 
   return mediaCache.get(key) ?? null;
+}
+
+export async function fetchTrackContextByName(params: {
+  trackName: string;
+  artistName?: string;
+}): Promise<TrackContext | null> {
+  try {
+    const accessToken = await requestClientCredentialsToken();
+    const query = `track:${params.trackName} artist:${params.artistName ?? ""}`.trim();
+
+    const response = await fetch(
+      `${SPOTIFY_API_BASE}/search?q=${encodeURIComponent(query)}&type=track,playlist&limit=1`,
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        cache: "no-store",
+      },
+    );
+    if (!response.ok) return null;
+
+    const json = (await response.json()) as {
+      tracks?: {
+        items?: Array<{
+          name?: string;
+          external_urls?: { spotify?: string };
+          artists?: Array<{ name?: string; external_urls?: { spotify?: string } }>;
+          album?: {
+            name?: string;
+            release_date?: string;
+            external_urls?: { spotify?: string };
+            images?: Array<{ url?: string }>;
+          };
+        }>;
+      };
+      playlists?: {
+        items?: Array<{
+          name?: string;
+          external_urls?: { spotify?: string };
+        }>;
+      };
+    };
+
+    const track = json.tracks?.items?.[0];
+    if (!track) return null;
+    const playlist = json.playlists?.items?.[0];
+
+    return {
+      trackName: track.name ?? params.trackName,
+      artistName: track.artists?.[0]?.name ?? params.artistName ?? "Unknown artist",
+      albumName: track.album?.name ?? "Unknown album",
+      releaseDate: track.album?.release_date ?? "",
+      imageUrl: track.album?.images?.[0]?.url ?? "",
+      trackUrl: track.external_urls?.spotify ?? "",
+      artistUrl: track.artists?.[0]?.external_urls?.spotify ?? "",
+      albumUrl: track.album?.external_urls?.spotify ?? "",
+      playlistName: playlist?.name ?? "",
+      playlistUrl: playlist?.external_urls?.spotify ?? "",
+    };
+  } catch {
+    return null;
+  }
 }

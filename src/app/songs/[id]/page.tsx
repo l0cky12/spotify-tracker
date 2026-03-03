@@ -4,7 +4,7 @@ import { Nav } from "@/components/Nav";
 import { RangeFilter } from "@/components/RangeFilter";
 import { TrendChart } from "@/components/TrendChart";
 import { buildSongListenWindow, buildSongRelatedTracks } from "@/lib/detail-stats";
-import { resolveEntityMedia } from "@/lib/spotify";
+import { fetchTrackContextByName, resolveEntityMedia } from "@/lib/spotify";
 import { DISPLAY_UNIT_COOKIE, formatEstimatedDuration, parseDisplayUnit } from "@/lib/display-unit";
 import { buildCollectionStats } from "@/lib/stats";
 import { readHistoryEntries } from "@/lib/storage";
@@ -45,6 +45,9 @@ export default async function SongDetailPage({ params, searchParams }: PageProps
   const relatedTracks = buildSongRelatedTracks(entries, range, songId);
   const listenWindow = buildSongListenWindow(entries, range, songId);
   const media = song ? await resolveEntityMedia({ kind: "songs", name: song.name, subtitle: song.subtitle }) : null;
+  const trackContext = song
+    ? await fetchTrackContextByName({ trackName: song.name, artistName: song.subtitle })
+    : null;
 
   return (
     <main className="w-full px-4 py-8 pt-20 md:px-8 lg:pl-[19rem] lg:pr-8 lg:pt-8">
@@ -92,12 +95,29 @@ export default async function SongDetailPage({ params, searchParams }: PageProps
               <Stat label="Avg play length" value={`${song.avgMinutes.toFixed(1)}m`} />
               <Stat label="First listen" value={formatListenDate(listenWindow.firstListen)} />
               <Stat label="Last listen" value={formatListenDate(listenWindow.lastListen)} />
+              <Stat label="Release date" value={trackContext?.releaseDate || "No data"} />
             </div>
             <div className="mt-4">
               <p className="mb-2 text-xs uppercase tracking-wide text-[var(--muted)]">Listening trend</p>
               <TrendChart points={song.trend} />
             </div>
           </article>
+
+          <section className="ui-panel mt-6 p-5">
+            <h2 className="text-lg font-semibold">Track Context</h2>
+            <p className="mt-1 text-sm text-[var(--muted)]">
+              View playlist, artist, album, and song info with clickable URLs.
+            </p>
+            <div className="mt-4 space-y-2 text-sm">
+              <ContextLink label="Song URL" href={trackContext?.trackUrl} />
+              <ContextLink label="Artist URL" href={trackContext?.artistUrl} />
+              <ContextLink label="Album URL" href={trackContext?.albumUrl} />
+              <ContextLink
+                label={trackContext?.playlistName ? `Playlist URL (${trackContext.playlistName})` : "Playlist URL"}
+                href={trackContext?.playlistUrl}
+              />
+            </div>
+          </section>
 
           <section className="ui-panel mt-6 p-5">
             <h2 className="text-lg font-semibold">Related entries</h2>
@@ -136,4 +156,19 @@ function formatListenDate(value?: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "No data";
   return date.toLocaleString();
+}
+
+function ContextLink({ label, href }: { label: string; href?: string }) {
+  return (
+    <div className="ui-soft-panel flex items-center justify-between gap-3 px-3 py-2">
+      <span className="text-[var(--muted)]">{label}</span>
+      {href ? (
+        <a href={href} target="_blank" rel="noreferrer" className="truncate text-[var(--accent)] hover:underline">
+          {href}
+        </a>
+      ) : (
+        <span className="text-xs text-[var(--muted)]">No data</span>
+      )}
+    </div>
+  );
 }
