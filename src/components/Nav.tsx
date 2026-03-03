@@ -32,7 +32,7 @@ export function Nav() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed left-4 top-4 z-40 rounded-md border border-[var(--stroke)] bg-[var(--panel-strong)] px-3 py-2 text-sm font-semibold text-[var(--text)] shadow-[0_6px_20px_rgba(0,0,0,0.35)] lg:hidden"
+        className="ui-soft-panel fixed left-4 top-4 z-40 px-3 py-2 text-sm font-semibold text-[var(--text)] lg:hidden"
       >
         Menu
       </button>
@@ -47,12 +47,12 @@ export function Nav() {
       ) : null}
 
       <nav
-        className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-[var(--stroke)] bg-[var(--panel-strong)]/95 p-4 shadow-[0_0_45px_rgba(0,0,0,0.4)] backdrop-blur-md transition-transform duration-200 lg:translate-x-0 ${
+        className={`fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r border-[var(--stroke)] bg-[color:var(--panel-glass)] p-5 shadow-[0_18px_48px_rgba(0,0,0,0.34)] backdrop-blur-xl transition-transform duration-300 lg:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="mb-6 flex items-center justify-between">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--accent)]">
+        <div className="mb-8 flex items-center justify-between">
+          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[var(--accent)]">
             Spotify Tracker
           </p>
           <button
@@ -72,10 +72,10 @@ export function Nav() {
                 key={link.href}
                 href={`${link.href}${suffix}`}
                 onClick={() => setOpen(false)}
-                className={`block rounded-lg px-3 py-2 text-sm font-medium transition ${
+                className={`block rounded-xl px-3 py-2.5 text-sm font-medium transition ${
                   active
-                    ? "bg-[var(--accent)] text-[var(--accent-ink)]"
-                    : "text-[var(--text)] hover:bg-white/10"
+                    ? "bg-[var(--accent)] text-[var(--accent-ink)] shadow-[0_6px_18px_rgba(0,0,0,0.18)]"
+                    : "text-[var(--text)] hover:bg-white/8"
                 }`}
               >
                 {link.label}
@@ -84,12 +84,12 @@ export function Nav() {
           })}
         </div>
 
-        <div className="mt-auto space-y-2">
+        <div className="mt-auto space-y-3">
           <form action="/api/sync" method="post">
             <input type="hidden" name="redirectTo" value={`${pathname}${suffix}`} />
             <button
               type="submit"
-              className="block w-full rounded-lg border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-center text-sm font-semibold text-[var(--text)] transition hover:brightness-110"
+              className="ui-primary-btn block w-full px-3 py-2.5 text-center text-sm"
             >
               Sync now
             </button>
@@ -97,7 +97,7 @@ export function Nav() {
           <form action="/api/auth/logout" method="post">
             <button
               type="submit"
-              className="block w-full rounded-lg border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-center text-sm font-semibold text-[var(--text)] transition hover:brightness-110"
+              className="ui-ghost-btn block w-full px-3 py-2.5 text-center text-sm"
             >
               Disconnect
             </button>
@@ -105,10 +105,10 @@ export function Nav() {
           <Link
             href={`/settings/theme${suffix}`}
             onClick={() => setOpen(false)}
-            className={`block w-full rounded-lg px-3 py-2 text-center text-sm font-semibold transition ${
+            className={`block w-full rounded-xl px-3 py-2.5 text-center text-sm font-semibold transition ${
               pathname === "/settings/theme"
                 ? "bg-[var(--accent)] text-[var(--accent-ink)]"
-                : "border border-[var(--stroke)] bg-[var(--panel-soft)] text-[var(--text)] hover:brightness-110"
+                : "ui-ghost-btn text-[var(--text)]"
             }`}
           >
             Settings

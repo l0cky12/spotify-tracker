@@ -23,7 +23,7 @@ export function ThemePicker() {
   );
 
   return (
-    <section className="rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
+    <section className="ui-panel p-5">
       <h2 className="text-lg font-semibold">Theme</h2>
       <p className="mt-1 text-sm text-[var(--muted)]">Pick your visual style.</p>
       <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -37,10 +37,10 @@ export function ThemePicker() {
                 setTheme(theme.id);
                 setActiveTheme(theme.id);
               }}
-              className={`rounded-xl border p-4 text-left transition ${
+              className={`rounded-2xl border p-4 text-left transition ${
                 active
-                  ? "border-[var(--accent)] bg-[var(--panel-soft)]"
-                  : "border-[var(--stroke)] bg-[var(--panel-soft)]/60 hover:brightness-110"
+                  ? "border-[var(--accent)] bg-[color:var(--panel-glass)] shadow-[0_8px_20px_rgba(0,0,0,0.2)]"
+                  : "border-[var(--stroke)] bg-[color:var(--panel-glass)]/70 hover:brightness-110"
               }`}
             >
               <p className="font-semibold">{theme.name}</p>

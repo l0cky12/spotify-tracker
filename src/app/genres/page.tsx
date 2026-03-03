@@ -38,22 +38,25 @@ export default async function GenresPage({ searchParams }: PageProps) {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 pt-20 md:px-8 lg:pl-72 lg:pt-8">
-      <h1 className="mb-4 text-3xl font-bold">Genres</h1>
       <Nav />
+      <header className="ui-panel mb-4 p-5">
+        <p className="text-xs uppercase tracking-[0.2em] text-[var(--accent)]">Library</p>
+        <h1 className="mt-2 text-3xl font-bold">Genres</h1>
+      </header>
       <RangeFilter selectedRange={range.preset} from={range.from} to={range.to} />
       <p className="mt-3 text-xs uppercase tracking-wide text-[var(--muted)]">Range: {range.label}</p>
       <div className="mt-6 space-y-4">
         {genres.length ? (
           genres.map((genre) => (
-            <article key={genre.id} className="rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-4">
+            <article key={genre.id} className="ui-panel p-4">
               <div className="flex flex-col gap-4 md:flex-row md:items-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-[var(--panel-soft)] text-2xl font-bold text-[var(--accent)]">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[color:var(--panel-glass)] text-2xl font-bold text-[var(--accent)]">
                   #
                 </div>
                 <div className="min-w-0 flex-1">
                   <Link
                     href={`/genres/${encodeURIComponent(genre.id)}?${rangeQuery}`}
-                    className="truncate text-lg font-semibold hover:text-[var(--accent)] hover:underline"
+                    className="truncate text-lg font-semibold hover:text-[var(--accent)]"
                   >
                     #{genre.currentRank} {genre.name}
                   </Link>
@@ -68,7 +71,7 @@ export default async function GenresPage({ searchParams }: PageProps) {
             </article>
           ))
         ) : (
-          <article className="rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-4 text-sm text-[var(--muted)]">
+          <article className="ui-panel p-4 text-sm text-[var(--muted)]">
             No genre data inferred from this history range.
           </article>
         )}

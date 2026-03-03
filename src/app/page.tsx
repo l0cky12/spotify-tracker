@@ -112,34 +112,38 @@ export default async function Home({ searchParams }: PageProps) {
       <Nav />
       <AutoSync intervalMinutes={autoSyncMinutes} />
 
-      <header className="mb-6 rounded-3xl border border-[var(--stroke)] bg-[linear-gradient(160deg,var(--panel),var(--panel-soft))] p-6 shadow-[0_20px_45px_rgba(0,0,0,0.28)] backdrop-blur-sm">
-        <h1 className="text-3xl font-bold text-[var(--text)]">Spotify Tracker</h1>
-        <p className="mt-2 text-sm text-[var(--muted)]">
+      <header className="ui-panel mb-6 p-6 sm:p-7">
+        <p className="text-xs uppercase tracking-[0.2em] text-[var(--accent)]">Dashboard</p>
+        <h1 className="mt-2 text-3xl font-bold text-[var(--text)] sm:text-4xl">Spotify Tracker</h1>
+        <p className="mt-3 max-w-2xl text-sm text-[var(--muted)]">
           Import your Spotify JSON history and explore songs, albums, artists, and genres by listening time.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
           <Link
             href="/settings/theme"
-            className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-ink)] hover:brightness-110"
+            className="ui-primary-btn px-4 py-2 text-sm"
           >
             Settings
           </Link>
         </div>
-        <p className="mt-3 text-xs text-[var(--muted)]">Auto-sync: {autoSyncText} | Now Playing refresh: {nowPlayingRefreshText}</p>
+        <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-[var(--muted)]">
+          <span className="ui-soft-panel px-2 py-1">Auto-sync: {autoSyncText}</span>
+          <span className="ui-soft-panel px-2 py-1">Now Playing refresh: {nowPlayingRefreshText}</span>
+        </div>
       </header>
 
       {syncState === "ok" ? (
-        <p className="mt-4 rounded-lg border border-sky-500/50 bg-sky-500/10 px-3 py-2 text-sm text-sky-200">
+        <p className="ui-soft-panel mt-4 px-3 py-2 text-sm text-sky-200">
           Sync completed: {syncCount ?? "0"} recent plays imported.
         </p>
       ) : null}
       {syncError === "auth-required" ? (
-        <p className="mt-4 rounded-lg border border-rose-500/50 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+        <p className="ui-soft-panel mt-4 border-rose-500/50 px-3 py-2 text-sm text-rose-200">
           Sync failed: connect Spotify first from Settings.
         </p>
       ) : null}
       {syncError === "sync-failed" ? (
-        <p className="mt-4 rounded-lg border border-rose-500/50 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+        <p className="ui-soft-panel mt-4 border-rose-500/50 px-3 py-2 text-sm text-rose-200">
           Sync failed{syncReason ? `: ${syncReason}` : "."}
         </p>
       ) : null}
@@ -208,7 +212,7 @@ export default async function Home({ searchParams }: PageProps) {
         timeline={timeline}
       />
 
-      <section className="mt-8 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
+      <section className="ui-panel mt-8 p-5">
         <h2 className="text-lg font-semibold">Drill down</h2>
         {!analyticsEntries.length && allEntries.length > 0 ? (
           <p className="mt-2 text-sm text-[var(--muted)]">
@@ -218,25 +222,25 @@ export default async function Home({ searchParams }: PageProps) {
         <div className="mt-4 flex flex-wrap gap-3">
           <Link
             href={`/songs?${rangeQuery}`}
-            className="rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm hover:brightness-110"
+            className="ui-ghost-btn px-3 py-2 text-sm"
           >
             Songs page
           </Link>
           <Link
             href={`/albums?${rangeQuery}`}
-            className="rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm hover:brightness-110"
+            className="ui-ghost-btn px-3 py-2 text-sm"
           >
             Albums page
           </Link>
           <Link
             href={`/artists?${rangeQuery}`}
-            className="rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm hover:brightness-110"
+            className="ui-ghost-btn px-3 py-2 text-sm"
           >
             Artists page
           </Link>
           <Link
             href={`/genres?${rangeQuery}`}
-            className="rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm hover:brightness-110"
+            className="ui-ghost-btn px-3 py-2 text-sm"
           >
             Genres page
           </Link>
@@ -248,7 +252,7 @@ export default async function Home({ searchParams }: PageProps) {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <article className="rounded-3xl border border-[var(--stroke)] bg-[linear-gradient(150deg,var(--panel),var(--panel-soft))] p-4 shadow-[0_10px_24px_rgba(0,0,0,0.18)]">
+    <article className="ui-panel p-4">
       <p className="text-xs uppercase tracking-wide text-[var(--muted)]">{label}</p>
       <p className="mt-2 text-2xl font-bold">{value}</p>
     </article>
@@ -265,7 +269,7 @@ function TopCard({
   secondary: string;
 }) {
   return (
-    <article className="rounded-3xl border border-[var(--stroke)] bg-[linear-gradient(160deg,var(--panel),var(--panel-soft))] p-4 shadow-[0_10px_24px_rgba(0,0,0,0.16)]">
+    <article className="ui-panel p-4">
       <p className="text-xs uppercase tracking-wide text-[var(--muted)]">{title}</p>
       <p className="mt-3 text-lg font-semibold">{primary}</p>
       <p className="mt-1 text-sm text-[var(--muted)]">{secondary}</p>

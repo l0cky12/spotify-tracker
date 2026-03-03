@@ -67,13 +67,13 @@ export function NowPlayingCard({ initialNowPlaying, refreshSeconds }: Props) {
   }, [clientProgressMs, nowPlaying?.durationMs]);
 
   return (
-    <section className="mt-6 rounded-3xl border border-[var(--stroke)] bg-[linear-gradient(160deg,var(--panel),var(--panel-soft))] p-5 shadow-[0_10px_30px_rgba(0,0,0,0.18)]">
+    <section className="ui-panel mt-6 p-5">
       <p className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Now Playing</p>
       {nowPlaying ? (
         <div className="mt-3 flex items-center gap-3">
           {nowPlaying.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={nowPlaying.imageUrl} alt={nowPlaying.albumName} className="h-16 w-16 rounded-xl object-cover" />
+            <img src={nowPlaying.imageUrl} alt={nowPlaying.albumName} className="h-16 w-16 rounded-2xl object-cover shadow-[0_8px_20px_rgba(0,0,0,0.3)]" />
           ) : (
             <div className="h-16 w-16 rounded-xl border border-[var(--stroke)] bg-[var(--panel-soft)]" />
           )}
@@ -89,8 +89,11 @@ export function NowPlayingCard({ initialNowPlaying, refreshSeconds }: Props) {
 
       {nowPlaying ? (
         <div className="mt-4">
-          <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--panel-strong)]">
-            <div className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-1000" style={{ width: `${progress}%` }} />
+          <div className="h-2.5 w-full overflow-hidden rounded-full bg-[var(--panel-strong)]">
+            <div
+              className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-1000"
+              style={{ width: `${progress}%` }}
+            />
           </div>
           <div className="mt-2 flex items-center justify-between text-xs text-[var(--muted)]">
             <span>{formatMs(clientProgressMs)}</span>

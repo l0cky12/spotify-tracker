@@ -39,7 +39,7 @@ export function DashboardVisuals({ unitLabel, unitSuffix, domainSlices, genreSli
     return (
       <section className="mt-10 grid grid-cols-1 gap-6 xl:grid-cols-2">
         {Array.from({ length: 4 }).map((_, index) => (
-          <article key={index} className="h-96 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
+          <article key={index} className="ui-panel h-96 p-5">
             <div className="h-full w-full rounded-lg bg-[var(--panel-soft)]/60" />
           </article>
         ))}
@@ -49,7 +49,7 @@ export function DashboardVisuals({ unitLabel, unitSuffix, domainSlices, genreSli
 
   return (
     <section className="mt-10 grid grid-cols-1 gap-6 xl:grid-cols-2">
-      <article className="rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
+      <article className="ui-panel p-5">
         <p className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">Listening Mix</p>
         <h3 className="mt-2 text-lg font-semibold">Songs vs Albums vs Artists vs Genres ({unitLabel})</h3>
         <div className="mt-5 h-80 min-w-0">
@@ -66,7 +66,7 @@ export function DashboardVisuals({ unitLabel, unitSuffix, domainSlices, genreSli
         </div>
       </article>
 
-      <article className="rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
+      <article className="ui-panel p-5">
         <p className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">Genre Split</p>
         <h3 className="mt-2 text-lg font-semibold">Top Genres by Estimated {unitLabel}</h3>
         <div className="mt-5 h-80 min-w-0">
@@ -83,7 +83,7 @@ export function DashboardVisuals({ unitLabel, unitSuffix, domainSlices, genreSli
         </div>
       </article>
 
-      <article className="rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5 xl:col-span-2">
+      <article className="ui-panel p-5 xl:col-span-2">
         <p className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">Timeline</p>
         <h3 className="mt-2 text-lg font-semibold">Estimated {unitLabel} by Day</h3>
         <div className="mt-5 h-80 min-w-0">

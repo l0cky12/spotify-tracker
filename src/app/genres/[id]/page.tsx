@@ -47,12 +47,15 @@ export default async function GenreDetailPage({ params, searchParams }: PageProp
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 pt-20 md:px-8 lg:pl-72 lg:pt-8">
       <Nav />
-      <h1 className="mb-4 text-3xl font-bold">Genre Stats</h1>
+      <header className="ui-panel mb-4 p-5">
+        <p className="text-xs uppercase tracking-[0.2em] text-[var(--accent)]">Detail</p>
+        <h1 className="mt-2 text-3xl font-bold">Genre Stats</h1>
+      </header>
       <RangeFilter selectedRange={range.preset} from={range.from} to={range.to} />
       <p className="mt-3 text-xs uppercase tracking-wide text-[var(--muted)]">Range: {range.label}</p>
 
       {!genre ? (
-        <article className="mt-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5 text-sm text-[var(--muted)]">
+        <article className="ui-panel mt-6 p-5 text-sm text-[var(--muted)]">
           Genre not found in this date range.
           <div className="mt-3">
             <Link href={`/genres?${rangeQuery}`} className="text-[var(--accent)] hover:underline">
@@ -62,7 +65,7 @@ export default async function GenreDetailPage({ params, searchParams }: PageProp
         </article>
       ) : (
         <>
-          <article className="mt-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
+          <article className="ui-panel mt-6 p-5">
             <p className="text-2xl font-semibold">{genre.name}</p>
             <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
               <Stat label="Listened" value={formatEstimatedDuration(genre.totalHours, displayUnit)} />
@@ -75,11 +78,11 @@ export default async function GenreDetailPage({ params, searchParams }: PageProp
             </div>
           </article>
 
-          <section className="mt-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
+          <section className="ui-panel mt-6 p-5">
             <h2 className="text-lg font-semibold">Tracks in this inferred genre</h2>
             <div className="mt-4 space-y-2">
               {relatedTracks.slice(0, 30).map((track) => (
-                <div key={track.id} className="flex items-center justify-between rounded-lg bg-[var(--panel-soft)] px-3 py-2 text-sm">
+                <div key={track.id} className="ui-soft-panel flex items-center justify-between px-3 py-2 text-sm">
                   <span className="truncate">{track.name} <span className="text-[var(--muted)]">by {track.artistName}</span></span>
                   <span className="text-[var(--muted)]">{formatEstimatedDuration(track.hours, displayUnit)}</span>
                 </div>
@@ -101,7 +104,7 @@ export default async function GenreDetailPage({ params, searchParams }: PageProp
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <article className="rounded-xl border border-[var(--stroke)] bg-[var(--panel-soft)] p-3">
+    <article className="ui-soft-panel p-3">
       <p className="text-xs uppercase tracking-wide text-[var(--muted)]">{label}</p>
       <p className="mt-1 text-xl font-semibold">{value}</p>
     </article>

@@ -22,14 +22,14 @@ export function RangeFilter({ selectedRange, from, to }: Props) {
   return (
     <form
       method="get"
-      className="mt-4 flex flex-col gap-3 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-4 md:flex-row md:flex-wrap md:items-end"
+      className="ui-panel mt-5 grid grid-cols-1 gap-3 p-4 md:grid-cols-[1.3fr_1fr_1fr_auto] md:items-end"
     >
-      <label className="flex flex-col gap-1 text-xs uppercase tracking-wide text-[var(--muted)]">
+      <label className="flex flex-col gap-1 text-xs uppercase tracking-[0.16em] text-[var(--muted)]">
         Range
         <select
           name="range"
           defaultValue={selectedRange}
-          className="rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm text-[var(--text)]"
+          className="rounded-xl border border-[var(--stroke)] bg-[color:var(--panel-glass)] px-3 py-2.5 text-sm text-[var(--text)]"
         >
           {presets.map((preset) => (
             <option key={preset.value} value={preset.value}>
@@ -39,29 +39,29 @@ export function RangeFilter({ selectedRange, from, to }: Props) {
         </select>
       </label>
 
-      <label className="flex flex-col gap-1 text-xs uppercase tracking-wide text-[var(--muted)]">
+      <label className="flex flex-col gap-1 text-xs uppercase tracking-[0.16em] text-[var(--muted)]">
         From
         <input
           type="date"
           name="from"
           defaultValue={from}
-          className="rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm text-[var(--text)]"
+          className="rounded-xl border border-[var(--stroke)] bg-[color:var(--panel-glass)] px-3 py-2.5 text-sm text-[var(--text)]"
         />
       </label>
 
-      <label className="flex flex-col gap-1 text-xs uppercase tracking-wide text-[var(--muted)]">
+      <label className="flex flex-col gap-1 text-xs uppercase tracking-[0.16em] text-[var(--muted)]">
         To
         <input
           type="date"
           name="to"
           defaultValue={to}
-          className="rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm text-[var(--text)]"
+          className="rounded-xl border border-[var(--stroke)] bg-[color:var(--panel-glass)] px-3 py-2.5 text-sm text-[var(--text)]"
         />
       </label>
 
       <button
         type="submit"
-        className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-ink)] hover:brightness-110"
+        className="ui-primary-btn h-[42px] px-5 text-sm"
       >
         Apply
       </button>

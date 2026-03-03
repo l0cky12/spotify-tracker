@@ -35,15 +35,15 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 pt-20 md:px-8 lg:pl-72 lg:pt-8">
       <Nav />
-      <header className="mb-6">
-        <p className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">Settings</p>
+      <header className="ui-panel mb-6 p-6">
+        <p className="text-xs uppercase tracking-[0.22em] text-[var(--accent)]">Settings</p>
         <h1 className="mt-2 text-3xl font-bold">App Settings</h1>
-        <p className="mt-2 text-sm text-[var(--muted)]">
+        <p className="mt-2 max-w-2xl text-sm text-[var(--muted)]">
           Choose how Spotify Tracker looks and how listening estimates are displayed.
         </p>
       </header>
 
-      <section className="rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
+      <section className="ui-panel p-5">
         <h2 className="text-lg font-semibold">Display Unit</h2>
         <p className="mt-1 text-sm text-[var(--muted)]">Switch between hours and minutes for estimated listening values.</p>
         <form action="/api/settings/display-unit" method="post" className="mt-4 flex flex-wrap gap-3">
@@ -52,10 +52,10 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
             type="submit"
             name="displayUnit"
             value="hours"
-            className={`rounded-xl border px-4 py-3 text-left transition ${
+            className={`rounded-2xl border px-4 py-3 text-left transition ${
               displayUnit === "hours"
-                ? "border-[var(--accent)] bg-[var(--panel-soft)]"
-                : "border-[var(--stroke)] bg-[var(--panel-soft)]/60 hover:brightness-110"
+                ? "border-[var(--accent)] bg-[color:var(--panel-glass)]"
+                : "border-[var(--stroke)] bg-[color:var(--panel-glass)]/70 hover:brightness-110"
             }`}
           >
             <p className="font-semibold">Hours</p>
@@ -65,10 +65,10 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
             type="submit"
             name="displayUnit"
             value="minutes"
-            className={`rounded-xl border px-4 py-3 text-left transition ${
+            className={`rounded-2xl border px-4 py-3 text-left transition ${
               displayUnit === "minutes"
-                ? "border-[var(--accent)] bg-[var(--panel-soft)]"
-                : "border-[var(--stroke)] bg-[var(--panel-soft)]/60 hover:brightness-110"
+                ? "border-[var(--accent)] bg-[color:var(--panel-glass)]"
+                : "border-[var(--stroke)] bg-[color:var(--panel-glass)]/70 hover:brightness-110"
             }`}
           >
             <p className="font-semibold">Minutes</p>
@@ -77,20 +77,20 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
         </form>
       </section>
 
-      <section className="mt-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
+      <section className="ui-panel mt-6 p-5">
         <h2 className="text-lg font-semibold">Spotify Connection</h2>
         <p className="mt-1 text-sm text-[var(--muted)]">Connect your account for manual/auto sync and now-playing data.</p>
         <div className="mt-4 flex flex-wrap gap-3">
           <Link
             href="/api/auth/login"
-            className="rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-4 py-2 text-sm font-semibold hover:brightness-110"
+            className="ui-primary-btn px-4 py-2 text-sm"
           >
             Connect Spotify
           </Link>
           <form action="/api/auth/logout" method="post">
             <button
               type="submit"
-              className="rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-4 py-2 text-sm font-semibold hover:brightness-110"
+              className="ui-ghost-btn px-4 py-2 text-sm"
             >
               Disconnect
             </button>
@@ -98,7 +98,7 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
         </div>
       </section>
 
-      <section className="mt-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
+      <section className="ui-panel mt-6 p-5">
         <h2 className="text-lg font-semibold">Sync Schedule</h2>
         <p className="mt-1 text-sm text-[var(--muted)]">
           Automatically run Spotify sync in the background while this app is open.
@@ -119,10 +119,10 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
               type="submit"
               name="autoSyncMinutes"
               value={option.value}
-              className={`rounded-xl border px-4 py-2 text-sm font-medium transition ${
+              className={`rounded-2xl border px-4 py-2 text-sm font-medium transition ${
                 autoSyncMinutes === option.value
-                  ? "border-[var(--accent)] bg-[var(--panel-soft)]"
-                  : "border-[var(--stroke)] bg-[var(--panel-soft)]/60 hover:brightness-110"
+                  ? "border-[var(--accent)] bg-[color:var(--panel-glass)]"
+                  : "border-[var(--stroke)] bg-[color:var(--panel-glass)]/70 hover:brightness-110"
               }`}
             >
               {option.label}
@@ -131,7 +131,7 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
         </form>
       </section>
 
-      <section className="mt-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
+      <section className="ui-panel mt-6 p-5">
         <h2 className="text-lg font-semibold">Now Playing Refresh</h2>
         <p className="mt-1 text-sm text-[var(--muted)]">Controls how often the dashboard refreshes current-track progress.</p>
         <p className="mt-2 text-sm text-[var(--muted)]">Current: {nowPlayingRefreshLabel(nowPlayingRefreshSeconds)}</p>
@@ -149,10 +149,10 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
               type="submit"
               name="nowPlayingRefreshSeconds"
               value={option.value}
-              className={`rounded-xl border px-4 py-2 text-sm font-medium transition ${
+              className={`rounded-2xl border px-4 py-2 text-sm font-medium transition ${
                 nowPlayingRefreshSeconds === option.value
-                  ? "border-[var(--accent)] bg-[var(--panel-soft)]"
-                  : "border-[var(--stroke)] bg-[var(--panel-soft)]/60 hover:brightness-110"
+                  ? "border-[var(--accent)] bg-[color:var(--panel-glass)]"
+                  : "border-[var(--stroke)] bg-[color:var(--panel-glass)]/70 hover:brightness-110"
               }`}
             >
               {option.label}
@@ -161,18 +161,18 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
         </form>
       </section>
 
-      <section className="mt-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
+      <section className="ui-panel mt-6 p-5">
         <h2 className="text-lg font-semibold">Import Spotify JSON</h2>
         <p className="mt-1 text-sm text-[var(--muted)]">
           Upload Spotify streaming history JSON to merge into existing data or replace all stored data.
         </p>
         {importState === "ok" ? (
-          <p className="mt-3 rounded-lg border border-emerald-500/50 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
+          <p className="ui-soft-panel mt-3 border-emerald-500/50 px-3 py-2 text-sm text-emerald-200">
             Import complete: {importCount ?? "0"} entries ({importMode ?? "merge"} mode).
           </p>
         ) : null}
         {importState === "failed" ? (
-          <p className="mt-3 rounded-lg border border-rose-500/50 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+          <p className="ui-soft-panel mt-3 border-rose-500/50 px-3 py-2 text-sm text-rose-200">
             Import failed{importReason ? `: ${importReason}` : "."}
           </p>
         ) : null}
@@ -185,7 +185,7 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
               name="historyFile"
               accept=".json,application/json"
               required
-              className="w-full rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-[var(--stroke)] bg-[color:var(--panel-glass)] px-3 py-2 text-sm"
             />
           </label>
           <label className="block text-sm">
@@ -193,7 +193,7 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
             <select
               name="mode"
               defaultValue="merge"
-              className="w-full rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-[var(--stroke)] bg-[color:var(--panel-glass)] px-3 py-2 text-sm"
             >
               <option value="merge">Merge with existing listening history</option>
               <option value="replace">Replace all existing listening history</option>
@@ -201,7 +201,7 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
           </label>
           <button
             type="submit"
-            className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-ink)] hover:brightness-110"
+            className="ui-primary-btn px-4 py-2 text-sm"
           >
             Import JSON
           </button>
@@ -212,7 +212,7 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
       <div className="mt-6">
         <Link
           href="/"
-          className="inline-flex rounded-md border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-2 text-sm hover:brightness-110"
+          className="ui-ghost-btn inline-flex px-3 py-2 text-sm"
         >
           Back to dashboard
         </Link>
