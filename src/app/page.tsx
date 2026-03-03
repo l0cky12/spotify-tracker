@@ -13,6 +13,7 @@ import { DashboardCustomizer } from "@/components/DashboardCustomizer";
 import { VisualDashboards } from "@/components/VisualDashboards";
 import { buildCollectionStats, entriesInRange } from "@/lib/stats";
 import { readHistoryEntries } from "@/lib/storage";
+import { buildHomeInsights } from "@/lib/home-insights";
 import { resolveTimeRange } from "@/lib/time-range";
 import {
   AUTO_SYNC_INTERVAL_COOKIE,
@@ -141,6 +142,7 @@ export default async function Home({ searchParams }: PageProps) {
   const topArtistNames = artistStats.slice(0, 4).map((artist) => artist.name);
   const artistRankTimeline = buildArtistRankTimeline(analyticsEntries, topArtistNames);
   const genreSplit = genreStats.slice(0, 8).map((genre) => ({ name: genre.name, hours: Number(genre.totalHours.toFixed(2)) }));
+  const homeInsights = buildHomeInsights(analyticsEntries, allEntries);
 
   return (
     <main className="w-full px-4 py-8 pt-20 md:px-8 lg:pl-[19rem] lg:pr-8 lg:pt-8">
@@ -296,6 +298,7 @@ export default async function Home({ searchParams }: PageProps) {
           genres={genreSplit}
           artistRanks={artistRankTimeline}
           monthly={monthlyTimeline}
+          insights={homeInsights}
         />
       </div>
     </main>
