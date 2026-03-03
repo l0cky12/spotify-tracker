@@ -11,6 +11,19 @@ export type RelatedTrackStat = {
   playCount: number;
 };
 
+export type RelatedAlbumStat = {
+  id: string;
+  name: string;
+  artistName: string;
+  hours: number;
+  playCount: number;
+};
+
+export type ListenWindow = {
+  firstListen?: string;
+  lastListen?: string;
+};
+
 function normalizeText(value: string | null | undefined, fallback: string): string {
   const out = (value ?? "").trim();
   return out.length ? out : fallback;
@@ -51,6 +64,25 @@ function sortStats(store: Map<string, RelatedTrackStat>): RelatedTrackStat[] {
     .sort((a, b) => b.hours - a.hours || b.playCount - a.playCount);
 }
 
+function sortAlbumStats(store: Map<string, RelatedAlbumStat>): RelatedAlbumStat[] {
+  return Array.from(store.values())
+    .map((item) => ({ ...item, hours: Number(item.hours.toFixed(3)) }))
+    .sort((a, b) => b.hours - a.hours || b.playCount - a.playCount);
+}
+
+function toListenWindow(timestamps: string[]): ListenWindow {
+  if (!timestamps.length) return {};
+  const sorted = timestamps
+    .map((value) => new Date(value))
+    .filter((date) => !Number.isNaN(date.getTime()))
+    .sort((a, b) => a.getTime() - b.getTime());
+  if (!sorted.length) return {};
+  return {
+    firstListen: sorted[0].toISOString(),
+    lastListen: sorted[sorted.length - 1].toISOString(),
+  };
+}
+
 export function buildSongRelatedTracks(entries: HistoryEntry[], range: TimeRange | undefined, songId: string): RelatedTrackStat[] {
   const store = new Map<string, RelatedTrackStat>();
   for (const entry of entriesInRange(entries, range)) {
@@ -58,6 +90,15 @@ export function buildSongRelatedTracks(entries: HistoryEntry[], range: TimeRange
     addTrack(store, entry);
   }
   return sortStats(store);
+}
+
+export function buildSongListenWindow(entries: HistoryEntry[], range: TimeRange | undefined, songId: string): ListenWindow {
+  const timestamps: string[] = [];
+  for (const entry of entriesInRange(entries, range)) {
+    if (trackId(entry) !== songId) continue;
+    timestamps.push(entry.ts);
+  }
+  return toListenWindow(timestamps);
 }
 
 export function buildAlbumRelatedTracks(entries: HistoryEntry[], range: TimeRange | undefined, albumId: string): RelatedTrackStat[] {
@@ -74,6 +115,18 @@ export function buildAlbumRelatedTracks(entries: HistoryEntry[], range: TimeRang
   return sortStats(store);
 }
 
+export function buildAlbumListenWindow(entries: HistoryEntry[], range: TimeRange | undefined, albumId: string): ListenWindow {
+  const timestamps: string[] = [];
+  for (const entry of entriesInRange(entries, range)) {
+    const album = normalizeText(entry.master_metadata_album_album_name, "Unknown album");
+    const artist = normalizeText(entry.master_metadata_album_artist_name, "Unknown artist");
+    const id = `${album}::${artist}`;
+    if (id !== albumId) continue;
+    timestamps.push(entry.ts);
+  }
+  return toListenWindow(timestamps);
+}
+
 export function buildArtistRelatedTracks(
   entries: HistoryEntry[],
   range: TimeRange | undefined,
@@ -88,6 +141,50 @@ export function buildArtistRelatedTracks(
   }
 
   return sortStats(store);
+}
+
+export function buildArtistRelatedAlbums(
+  entries: HistoryEntry[],
+  range: TimeRange | undefined,
+  artistId: string,
+): RelatedAlbumStat[] {
+  const store = new Map<string, RelatedAlbumStat>();
+
+  for (const entry of entriesInRange(entries, range)) {
+    const artist = normalizeText(entry.master_metadata_album_artist_name, "Unknown artist");
+    if (artist !== artistId) continue;
+
+    const albumName = normalizeText(entry.master_metadata_album_album_name, "Unknown album");
+    const id = `${albumName}::${artist}`;
+    const current = store.get(id);
+    const hours = entry.ms_played / 3600000;
+
+    if (!current) {
+      store.set(id, {
+        id,
+        name: albumName,
+        artistName: artist,
+        hours,
+        playCount: 1,
+      });
+      continue;
+    }
+
+    current.hours += hours;
+    current.playCount += 1;
+  }
+
+  return sortAlbumStats(store);
+}
+
+export function buildArtistListenWindow(entries: HistoryEntry[], range: TimeRange | undefined, artistId: string): ListenWindow {
+  const timestamps: string[] = [];
+  for (const entry of entriesInRange(entries, range)) {
+    const artist = normalizeText(entry.master_metadata_album_artist_name, "Unknown artist");
+    if (artist !== artistId) continue;
+    timestamps.push(entry.ts);
+  }
+  return toListenWindow(timestamps);
 }
 
 function genreForEntry(entry: HistoryEntry): string {

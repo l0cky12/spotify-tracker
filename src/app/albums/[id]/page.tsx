@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { RangeFilter } from "@/components/RangeFilter";
 import { TrendChart } from "@/components/TrendChart";
-import { buildAlbumRelatedTracks } from "@/lib/detail-stats";
+import { buildAlbumListenWindow, buildAlbumRelatedTracks } from "@/lib/detail-stats";
 import { resolveEntityMedia } from "@/lib/spotify";
 import { DISPLAY_UNIT_COOKIE, formatEstimatedDuration, parseDisplayUnit } from "@/lib/display-unit";
 import { buildCollectionStats } from "@/lib/stats";
@@ -44,6 +44,7 @@ export default async function AlbumDetailPage({ params, searchParams }: PageProp
 
   const album = albums.find((entry) => entry.id === albumId);
   const relatedTracks = buildAlbumRelatedTracks(entries, range, albumId);
+  const listenWindow = buildAlbumListenWindow(entries, range, albumId);
   const media = album ? await resolveEntityMedia({ kind: "albums", name: album.name, subtitle: album.subtitle }) : null;
 
   return (
@@ -90,6 +91,8 @@ export default async function AlbumDetailPage({ params, searchParams }: PageProp
               <Stat label="Listened" value={formatEstimatedDuration(album.totalHours, displayUnit)} />
               <Stat label="Play count" value={String(album.playCount)} />
               <Stat label="Avg play length" value={`${album.avgMinutes.toFixed(1)}m`} />
+              <Stat label="First listen" value={formatListenDate(listenWindow.firstListen)} />
+              <Stat label="Last listen" value={formatListenDate(listenWindow.lastListen)} />
             </div>
             <div className="mt-4">
               <p className="mb-2 text-xs uppercase tracking-wide text-[var(--muted)]">Listening trend</p>
@@ -98,9 +101,9 @@ export default async function AlbumDetailPage({ params, searchParams }: PageProp
           </article>
 
           <section className="ui-panel mt-6 p-5">
-            <h2 className="text-lg font-semibold">Tracks for this album</h2>
+            <h2 className="text-lg font-semibold">Top 10 songs from this album</h2>
             <div className="mt-4 space-y-2">
-              {relatedTracks.slice(0, 30).map((track) => (
+              {relatedTracks.slice(0, 10).map((track) => (
                 <div key={track.id} className="ui-soft-panel flex items-center justify-between px-3 py-2 text-sm">
                   <span className="truncate">{track.name}</span>
                   <span className="text-[var(--muted)]">{formatEstimatedDuration(track.hours, displayUnit)}</span>
@@ -128,4 +131,11 @@ function Stat({ label, value }: { label: string; value: string }) {
       <p className="mt-1 text-xl font-semibold">{value}</p>
     </article>
   );
+}
+
+function formatListenDate(value?: string): string {
+  if (!value) return "No data";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "No data";
+  return date.toLocaleString();
 }

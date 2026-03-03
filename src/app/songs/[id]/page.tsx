@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { RangeFilter } from "@/components/RangeFilter";
 import { TrendChart } from "@/components/TrendChart";
-import { buildSongRelatedTracks } from "@/lib/detail-stats";
+import { buildSongListenWindow, buildSongRelatedTracks } from "@/lib/detail-stats";
 import { resolveEntityMedia } from "@/lib/spotify";
 import { DISPLAY_UNIT_COOKIE, formatEstimatedDuration, parseDisplayUnit } from "@/lib/display-unit";
 import { buildCollectionStats } from "@/lib/stats";
@@ -43,6 +43,7 @@ export default async function SongDetailPage({ params, searchParams }: PageProps
   const songs = buildCollectionStats(entries, "songs", range);
   const song = songs.find((entry) => entry.id === songId);
   const relatedTracks = buildSongRelatedTracks(entries, range, songId);
+  const listenWindow = buildSongListenWindow(entries, range, songId);
   const media = song ? await resolveEntityMedia({ kind: "songs", name: song.name, subtitle: song.subtitle }) : null;
 
   return (
@@ -89,6 +90,8 @@ export default async function SongDetailPage({ params, searchParams }: PageProps
               <Stat label="Listened" value={formatEstimatedDuration(song.totalHours, displayUnit)} />
               <Stat label="Play count" value={String(song.playCount)} />
               <Stat label="Avg play length" value={`${song.avgMinutes.toFixed(1)}m`} />
+              <Stat label="First listen" value={formatListenDate(listenWindow.firstListen)} />
+              <Stat label="Last listen" value={formatListenDate(listenWindow.lastListen)} />
             </div>
             <div className="mt-4">
               <p className="mb-2 text-xs uppercase tracking-wide text-[var(--muted)]">Listening trend</p>
@@ -126,4 +129,11 @@ function Stat({ label, value }: { label: string; value: string }) {
       <p className="mt-1 text-xl font-semibold">{value}</p>
     </article>
   );
+}
+
+function formatListenDate(value?: string): string {
+  if (!value) return "No data";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "No data";
+  return date.toLocaleString();
 }

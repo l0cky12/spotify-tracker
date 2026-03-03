@@ -20,6 +20,7 @@ import {
   parseAutoSyncInterval,
   parseNowPlayingRefreshSeconds,
 } from "@/lib/auto-sync";
+import { fetchCurrentlyPlaying, refreshAccessToken } from "@/lib/spotify";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -45,9 +46,20 @@ export default async function Home({ searchParams }: PageProps) {
   const displayUnit = parseDisplayUnit(cookieStore.get(DISPLAY_UNIT_COOKIE)?.value);
   const autoSyncMinutes = parseAutoSyncInterval(cookieStore.get(AUTO_SYNC_INTERVAL_COOKIE)?.value);
   const nowPlayingRefreshSeconds = parseNowPlayingRefreshSeconds(cookieStore.get(NOW_PLAYING_REFRESH_COOKIE)?.value);
+  const refreshToken = cookieStore.get("spotify_refresh_token")?.value;
   const unitLabel = displayUnitLabel(displayUnit);
   const autoSyncText = autoSyncLabel(autoSyncMinutes);
   const nowPlayingRefreshText = nowPlayingRefreshLabel(nowPlayingRefreshSeconds);
+
+  let nowPlaying: Awaited<ReturnType<typeof fetchCurrentlyPlaying>> = null;
+  if (refreshToken) {
+    try {
+      const accessToken = await refreshAccessToken(refreshToken);
+      nowPlaying = await fetchCurrentlyPlaying(accessToken);
+    } catch {
+      nowPlaying = null;
+    }
+  }
 
   const allEntries = await readHistoryEntries();
   const filteredEntries = entriesInRange(allEntries, range);
@@ -82,10 +94,24 @@ export default async function Home({ searchParams }: PageProps) {
         <div className="pointer-events-none absolute -bottom-24 right-8 h-44 w-44 rounded-full bg-[var(--glow-b)] blur-3xl" />
 
         <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">Spotify Tracker</p>
-        <h1 className="mt-2 max-w-3xl text-2xl font-extrabold leading-tight sm:text-3xl">Your listening stats dashboard</h1>
-        <p className="mt-2 max-w-2xl text-xs text-[var(--muted)] sm:text-sm">
-          One place to view total plays, listening time, top items, and collection size across songs, albums, artists, and genres.
-        </p>
+        <h1 className="mt-2 max-w-3xl text-2xl font-extrabold leading-tight sm:text-3xl">Current Played Song</h1>
+        {nowPlaying ? (
+          <div className="mt-3 flex items-center gap-3">
+            {nowPlaying.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={nowPlaying.imageUrl} alt={nowPlaying.albumName} className="h-14 w-14 rounded-lg object-cover" />
+            ) : (
+              <div className="h-14 w-14 rounded-lg bg-[var(--panel-strong)]" />
+            )}
+            <div>
+              <p className="text-sm font-semibold">{nowPlaying.trackName}</p>
+              <p className="text-xs text-[var(--muted)]">{nowPlaying.artistName}</p>
+              <p className="text-xs text-[var(--muted)]">{nowPlaying.albumName}</p>
+            </div>
+          </div>
+        ) : (
+          <p className="mt-2 max-w-2xl text-xs text-[var(--muted)] sm:text-sm">No song is currently playing.</p>
+        )}
 
         <div className="mt-4 flex flex-wrap gap-2">
           <span className="rounded-full border border-[var(--stroke)] bg-[var(--panel-soft)] px-2.5 py-1 text-[11px] text-[var(--muted)]">
