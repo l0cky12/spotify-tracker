@@ -1,3 +1,6 @@
+ "use client";
+
+import { useState } from "react";
 import { TimePreset } from "@/lib/time-range";
 
 type Props = {
@@ -19,6 +22,10 @@ const presets: Array<{ value: TimePreset; label: string }> = [
 ];
 
 export function RangeFilter({ selectedRange, from, to }: Props) {
+  const [range, setRange] = useState<TimePreset>(selectedRange);
+  const [fromValue, setFromValue] = useState(from ?? "");
+  const [toValue, setToValue] = useState(to ?? "");
+
   return (
     <form
       method="get"
@@ -28,7 +35,15 @@ export function RangeFilter({ selectedRange, from, to }: Props) {
         Range
         <select
           name="range"
-          defaultValue={selectedRange}
+          value={range}
+          onChange={(event) => {
+            const next = event.target.value as TimePreset;
+            setRange(next);
+            if (next !== "custom") {
+              setFromValue("");
+              setToValue("");
+            }
+          }}
           className="rounded-xl border border-[var(--stroke)] bg-[var(--panel-strong)] px-3 py-2.5 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]"
         >
           {presets.map((preset) => (
@@ -44,7 +59,14 @@ export function RangeFilter({ selectedRange, from, to }: Props) {
         <input
           type="date"
           name="from"
-          defaultValue={from}
+          value={fromValue}
+          onChange={(event) => {
+            const next = event.target.value;
+            setFromValue(next);
+            if (next || toValue) {
+              setRange("custom");
+            }
+          }}
           className="rounded-xl border border-[var(--stroke)] bg-[var(--panel-strong)] px-3 py-2.5 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]"
         />
       </label>
@@ -54,7 +76,14 @@ export function RangeFilter({ selectedRange, from, to }: Props) {
         <input
           type="date"
           name="to"
-          defaultValue={to}
+          value={toValue}
+          onChange={(event) => {
+            const next = event.target.value;
+            setToValue(next);
+            if (fromValue || next) {
+              setRange("custom");
+            }
+          }}
           className="rounded-xl border border-[var(--stroke)] bg-[var(--panel-strong)] px-3 py-2.5 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]"
         />
       </label>

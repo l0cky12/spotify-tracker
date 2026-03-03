@@ -127,7 +127,7 @@ export default async function Home({ searchParams }: PageProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
           <StatCard label="Plays" value={String(analyticsEntries.length)} />
           <StatCard
             label={`Listening (${unitLabel})`}
@@ -194,19 +194,25 @@ export default async function Home({ searchParams }: PageProps) {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <article className="rounded-xl border border-[var(--stroke)] bg-[var(--panel-soft)] p-4">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">{label}</p>
-      <p className="mt-2 text-3xl font-extrabold leading-none">{value}</p>
+    <article className="rounded-xl border border-[var(--stroke)] bg-[var(--panel-soft)] p-4 sm:p-5">
+      <div className="flex items-center justify-between gap-6">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">{label}</p>
+        <p className="text-right text-3xl font-extrabold leading-none">{value}</p>
+      </div>
     </article>
   );
 }
 
 function TopStatCard({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
-    <article className="rounded-xl border border-[var(--stroke)] bg-[var(--panel-soft)] p-4">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">{label}</p>
-      <p className="mt-2 truncate text-lg font-bold">{value}</p>
-      <p className="mt-1 text-xs text-[var(--muted)]">{sub}</p>
+    <article className="rounded-xl border border-[var(--stroke)] bg-[var(--panel-soft)] p-4 sm:p-5">
+      <div className="flex items-start justify-between gap-6">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">{label}</p>
+        <div className="min-w-0 text-right">
+          <p className="truncate text-lg font-bold">{value}</p>
+          <p className="mt-1 text-xs text-[var(--muted)]">{sub}</p>
+        </div>
+      </div>
     </article>
   );
 }
