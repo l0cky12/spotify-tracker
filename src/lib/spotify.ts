@@ -143,6 +143,16 @@ export type TrackContext = {
   playlistUrl: string;
 };
 
+export type RecommendedTrack = {
+  uri: string;
+  name: string;
+  artist: string;
+  album: string;
+  imageUrl: string;
+  spotifyUrl: string;
+  releaseDate: string;
+};
+
 export async function fetchCurrentlyPlaying(accessToken: string): Promise<CurrentlyPlaying | null> {
   const response = await fetch(`${SPOTIFY_API_BASE}/me/player/currently-playing`, {
     headers: {
@@ -600,4 +610,92 @@ export async function fetchDiscoveryTrackUris(accessToken: string, limit = 20): 
     tracks?: Array<{ uri?: string }>;
   };
   return (recommendationsJson.tracks ?? []).map((track) => track.uri ?? "").filter(Boolean).slice(0, limit);
+}
+
+function normalizeTrackKey(name: string, artist: string): string {
+  return `${name.trim().toLowerCase()}::${artist.trim().toLowerCase()}`;
+}
+
+async function resolveArtistIdsByNames(accessToken: string, artistNames: string[]): Promise<string[]> {
+  const ids: string[] = [];
+  for (const name of artistNames.slice(0, 8)) {
+    const query = encodeURIComponent(`artist:${name}`);
+    const response = await fetch(`${SPOTIFY_API_BASE}/search?q=${query}&type=artist&limit=1`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
+    });
+    if (!response.ok) continue;
+    const json = (await response.json()) as {
+      artists?: { items?: Array<{ id?: string }> };
+    };
+    const id = json.artists?.items?.[0]?.id;
+    if (id) ids.push(id);
+    if (ids.length >= 5) break;
+  }
+  return ids;
+}
+
+export async function fetchUnheardRecommendations(params: {
+  artistNames: string[];
+  excludeUris: Set<string>;
+  excludeTrackKeys: Set<string>;
+  limit?: number;
+}): Promise<RecommendedTrack[]> {
+  try {
+    const limit = Math.min(Math.max(params.limit ?? 20, 1), 50);
+    const accessToken = await requestClientCredentialsToken();
+    const artistIds = await resolveArtistIdsByNames(accessToken, params.artistNames);
+    if (!artistIds.length) return [];
+
+    const response = await fetch(
+      `${SPOTIFY_API_BASE}/recommendations?limit=50&seed_artists=${artistIds.slice(0, 5).join(",")}`,
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        cache: "no-store",
+      },
+    );
+    if (!response.ok) return [];
+
+    const json = (await response.json()) as {
+      tracks?: Array<{
+        uri?: string;
+        name?: string;
+        external_urls?: { spotify?: string };
+        artists?: Array<{ name?: string }>;
+        album?: {
+          name?: string;
+          release_date?: string;
+          images?: Array<{ url?: string }>;
+        };
+      }>;
+    };
+
+    const unique: RecommendedTrack[] = [];
+    const seen = new Set<string>();
+    for (const track of json.tracks ?? []) {
+      const uri = track.uri ?? "";
+      const name = track.name ?? "";
+      const artist = track.artists?.[0]?.name ?? "";
+      const key = normalizeTrackKey(name, artist);
+      if (!name || !artist) continue;
+      if (uri && params.excludeUris.has(uri)) continue;
+      if (params.excludeTrackKeys.has(key)) continue;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      unique.push({
+        uri,
+        name,
+        artist,
+        album: track.album?.name ?? "Unknown album",
+        imageUrl: track.album?.images?.[0]?.url ?? "",
+        spotifyUrl: track.external_urls?.spotify ?? "",
+        releaseDate: track.album?.release_date ?? "",
+      });
+      if (unique.length >= limit) break;
+    }
+
+    return unique;
+  } catch {
+    return [];
+  }
 }
