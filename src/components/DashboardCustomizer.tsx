@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type SectionItem = {
   id: string;
@@ -17,6 +17,7 @@ const STORAGE_ACCENT = "spotify-tracker-dashboard-accent";
 const STORAGE_DENSITY = "spotify-tracker-dashboard-density";
 const STORAGE_COLS = "spotify-tracker-dashboard-stats-cols";
 const STORAGE_GLOW = "spotify-tracker-dashboard-glow";
+const STORAGE_DRAGMODE = "spotify-tracker-dashboard-dragmode";
 
 type Density = "comfortable" | "compact";
 
@@ -99,7 +100,11 @@ export function DashboardCustomizer({ sections }: Props) {
   const [glow, setGlow] = useState<boolean>(() =>
     typeof window === "undefined" ? true : window.localStorage.getItem(STORAGE_GLOW) !== "off",
   );
+  const [dragMode, setDragMode] = useState<boolean>(() =>
+    typeof window === "undefined" ? false : window.localStorage.getItem(STORAGE_DRAGMODE) === "on",
+  );
   const [dragged, setDragged] = useState<string | null>(null);
+  const draggedSectionRef = useRef<string | null>(null);
 
   useEffect(() => {
     applyAccent(accent);
@@ -140,6 +145,53 @@ export function DashboardCustomizer({ sections }: Props) {
     applyGlow(glow);
   }, [glow]);
 
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_DRAGMODE, dragMode ? "on" : "off");
+    const root = document.getElementById("dashboard-sections-root");
+    if (!root) return;
+    const items = Array.from(root.children).filter((node): node is HTMLElement => node instanceof HTMLElement);
+
+    for (const item of items) {
+      const id = item.dataset.sectionId;
+      if (!id) continue;
+      item.draggable = dragMode;
+      item.style.cursor = dragMode ? "grab" : "default";
+      item.style.userSelect = dragMode ? "none" : "";
+      item.ondragstart = dragMode
+        ? () => {
+            draggedSectionRef.current = id;
+            item.style.opacity = "0.65";
+          }
+        : null;
+      item.ondragend = dragMode
+        ? () => {
+            draggedSectionRef.current = null;
+            item.style.opacity = "";
+          }
+        : null;
+      item.ondragover = dragMode
+        ? (event) => {
+            event.preventDefault();
+          }
+        : null;
+      item.ondrop = dragMode
+        ? () => {
+            const draggedId = draggedSectionRef.current;
+            if (!draggedId || draggedId === id) return;
+            setOrder((current) => {
+              const next = [...current];
+              const from = next.indexOf(draggedId);
+              const to = next.indexOf(id);
+              if (from < 0 || to < 0) return current;
+              next.splice(from, 1);
+              next.splice(to, 0, draggedId);
+              return next;
+            });
+          }
+        : null;
+    }
+  }, [dragMode, order]);
+
   const resetDefaults = () => {
     const defaults = Object.fromEntries(sections.map((section) => [section.id, true]));
     setOrder(defaultOrder);
@@ -148,6 +200,7 @@ export function DashboardCustomizer({ sections }: Props) {
     setDensity("comfortable");
     setStatsColumns(2);
     setGlow(true);
+    setDragMode(false);
   };
 
   return (
@@ -268,6 +321,17 @@ export function DashboardCustomizer({ sections }: Props) {
                   <input type="checkbox" checked={glow} onChange={(event) => setGlow(event.target.checked)} />
                   Enable glow effects
                 </label>
+
+                <label className="flex items-center gap-2 text-sm text-[var(--muted)]">
+                  <input type="checkbox" checked={dragMode} onChange={(event) => setDragMode(event.target.checked)} />
+                  Drag and drop sections directly on dashboard
+                </label>
+
+                {dragMode ? (
+                  <p className="text-xs text-[var(--muted)]">
+                    Drag stats/graphs sections directly in the dashboard area to reorder them.
+                  </p>
+                ) : null}
 
                 <button type="button" onClick={resetDefaults} className="ui-ghost-btn px-4 py-2 text-sm">
                   Reset Defaults
