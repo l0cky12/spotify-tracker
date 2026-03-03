@@ -5,11 +5,11 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 const links = [
-  { href: "/", label: "Home" },
-  { href: "/songs", label: "Songs" },
-  { href: "/albums", label: "Albums" },
-  { href: "/artists", label: "Artists" },
-  { href: "/genres", label: "Genres" },
+  { href: "/", label: "Home", icon: "♪" },
+  { href: "/songs", label: "Songs", icon: "S" },
+  { href: "/albums", label: "Albums", icon: "A" },
+  { href: "/artists", label: "Artists", icon: "R" },
+  { href: "/genres", label: "Genres", icon: "G" },
 ];
 
 export function Nav() {
@@ -32,9 +32,9 @@ export function Nav() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="ui-soft-panel fixed left-4 top-4 z-40 px-3 py-2 text-sm font-semibold text-[var(--text)] lg:hidden"
+        className="ui-soft-panel fixed left-4 top-4 z-40 px-4 py-2 text-sm font-semibold text-[var(--text)] lg:hidden"
       >
-        Menu
+        Browse
       </button>
 
       {open ? (
@@ -42,29 +42,22 @@ export function Nav() {
           type="button"
           aria-label="Close menu overlay"
           onClick={() => setOpen(false)}
-          className="fixed inset-0 z-40 bg-black/60 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/70 lg:hidden"
         />
       ) : null}
 
       <nav
-        className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-[var(--stroke)] bg-[color:var(--panel-glass)] p-5 shadow-[0_18px_48px_rgba(0,0,0,0.34)] backdrop-blur-xl transition-transform duration-300 lg:translate-x-0 ${
+        className={`fixed left-0 top-0 z-50 flex h-screen w-[17rem] flex-col border-r border-[var(--stroke)] bg-[color:var(--panel)] px-5 py-6 shadow-[0_24px_48px_rgba(0,0,0,0.45)] transition-transform duration-300 lg:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="mb-8 flex items-center justify-between">
-          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[var(--accent)]">
-            Spotify Tracker
-          </p>
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="rounded-md px-2 py-1 text-sm text-[var(--muted)] hover:bg-white/10 lg:hidden"
-          >
-            Close
-          </button>
+        <div className="mb-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel-soft)] p-4">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">Your Music</p>
+          <p className="mt-2 text-2xl font-bold">Spotify Tracker</p>
+          <p className="mt-1 text-xs text-[var(--muted)]">Personal listening dashboard</p>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1">
           {links.map((link) => {
             const active = pathname === link.href;
             return (
@@ -72,46 +65,49 @@ export function Nav() {
                 key={link.href}
                 href={`${link.href}${suffix}`}
                 onClick={() => setOpen(false)}
-                className={`block rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
                   active
-                    ? "bg-[var(--accent)] text-[var(--accent-ink)] shadow-[0_6px_18px_rgba(0,0,0,0.18)]"
-                    : "text-[var(--text)] hover:bg-white/8"
+                    ? "bg-white text-black"
+                    : "text-[var(--muted)] hover:bg-[var(--panel-soft)] hover:text-[var(--text)]"
                 }`}
               >
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-current/25 text-xs">
+                  {link.icon}
+                </span>
                 {link.label}
               </Link>
             );
           })}
         </div>
 
-        <div className="mt-auto space-y-3">
-          <form action="/api/sync" method="post">
-            <input type="hidden" name="redirectTo" value={`${pathname}${suffix}`} />
-            <button
-              type="submit"
-              className="ui-primary-btn block w-full px-3 py-2.5 text-center text-sm"
-            >
-              Sync now
-            </button>
-          </form>
-          <form action="/api/auth/logout" method="post">
-            <button
-              type="submit"
-              className="ui-ghost-btn block w-full px-3 py-2.5 text-center text-sm"
-            >
-              Disconnect
-            </button>
-          </form>
+        <div className="mt-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel-soft)] p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Quick Actions</p>
+          <div className="mt-3 space-y-2">
+            <form action="/api/sync" method="post">
+              <input type="hidden" name="redirectTo" value={`${pathname}${suffix}`} />
+              <button type="submit" className="ui-primary-btn block w-full px-4 py-2 text-sm">
+                Sync Now
+              </button>
+            </form>
+            <form action="/api/auth/logout" method="post">
+              <button type="submit" className="ui-ghost-btn block w-full px-4 py-2 text-sm">
+                Disconnect
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div className="mt-auto">
           <Link
             href={`/settings/theme${suffix}`}
             onClick={() => setOpen(false)}
             className={`block w-full rounded-xl px-3 py-2.5 text-center text-sm font-semibold transition ${
               pathname === "/settings/theme"
                 ? "bg-[var(--accent)] text-[var(--accent-ink)]"
-                : "ui-ghost-btn text-[var(--text)]"
+                : "text-[var(--text)] hover:bg-[var(--panel-soft)]"
             }`}
           >
-            Settings
+            Theme Settings
           </Link>
         </div>
       </nav>

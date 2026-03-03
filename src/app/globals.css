@@ -1,115 +1,98 @@
 @import "tailwindcss";
 
-:root {
-  --bg: #05131f;
-  --panel: #0e2336;
-  --panel-soft: #18344e;
-  --panel-strong: #0a1c2b;
-  --panel-glass: #11283bcc;
-  --text: #e8f7ff;
-  --muted: #9fc7d8;
-  --accent: #29d3c4;
-  --accent-ink: #06231f;
-  --stroke: #2a5675;
-  --glow-a: #2dd4bf55;
-  --glow-b: #38bdf84d;
-  --bg-mid: #0a1b2c;
-  --bg-end: #071321;
-  --highlight: #ffffff24;
-}
-
+:root,
 [data-theme="dark"] {
-  --bg: #05131f;
-  --panel: #0e2336;
-  --panel-soft: #18344e;
-  --panel-strong: #0a1c2b;
-  --panel-glass: #11283bcc;
-  --text: #e8f7ff;
-  --muted: #9fc7d8;
-  --accent: #29d3c4;
-  --accent-ink: #06231f;
-  --stroke: #2a5675;
-  --glow-a: #2dd4bf55;
-  --glow-b: #38bdf84d;
-  --bg-mid: #0a1b2c;
-  --bg-end: #071321;
-  --highlight: #ffffff24;
+  --bg: #070707;
+  --panel: #121212;
+  --panel-soft: #1a1a1a;
+  --panel-strong: #242424;
+  --panel-glass: #141414f2;
+  --text: #f5f5f5;
+  --muted: #b3b3b3;
+  --accent: #1ed760;
+  --accent-ink: #031d0c;
+  --stroke: #2d2d2d;
+  --glow-a: #1ed7603d;
+  --glow-b: #10b9812b;
+  --bg-mid: #0d0d0d;
+  --bg-end: #050505;
+  --highlight: #ffffff1c;
 }
 
 [data-theme="light"] {
-  --bg: #f4f7ff;
+  --bg: #f8faf8;
   --panel: #ffffff;
-  --panel-soft: #e8eefc;
-  --panel-strong: #dde6fb;
-  --panel-glass: #ffffffd6;
-  --text: #111827;
-  --muted: #54627d;
-  --accent: #2563eb;
-  --accent-ink: #f8fbff;
-  --stroke: #bfd0f3;
-  --glow-a: #93c5fd66;
-  --glow-b: #60a5fa44;
-  --bg-mid: #e6efff;
-  --bg-end: #f6f9ff;
-  --highlight: #00000012;
+  --panel-soft: #f3f7f3;
+  --panel-strong: #e7efe8;
+  --panel-glass: #ffffffeb;
+  --text: #121212;
+  --muted: #4d5b4d;
+  --accent: #0c9f3d;
+  --accent-ink: #f6fff9;
+  --stroke: #d3dfd5;
+  --glow-a: #1db9542b;
+  --glow-b: #0ea54a24;
+  --bg-mid: #eef5ef;
+  --bg-end: #fcfffd;
+  --highlight: #00000010;
 }
 
 [data-theme="nord"] {
-  --bg: #2e3440;
-  --panel: #3b4252;
-  --panel-soft: #434c5e;
-  --panel-strong: #2f3643;
-  --panel-glass: #3b4252d4;
-  --text: #eceff4;
-  --muted: #d8dee9;
-  --accent: #88c0d0;
-  --accent-ink: #20333b;
-  --stroke: #4c566a;
-  --glow-a: #81a1c177;
-  --glow-b: #88c0d055;
-  --bg-mid: #3b4252;
-  --bg-end: #2c3340;
-  --highlight: #ffffff1f;
+  --bg: #121922;
+  --panel: #1d2631;
+  --panel-soft: #2a3644;
+  --panel-strong: #1f2c3b;
+  --panel-glass: #1d2631e3;
+  --text: #e5ebf3;
+  --muted: #9bb0c8;
+  --accent: #6fd2a7;
+  --accent-ink: #082317;
+  --stroke: #3a4f66;
+  --glow-a: #6fd2a73d;
+  --glow-b: #7aa8ff30;
+  --bg-mid: #1a2431;
+  --bg-end: #121a24;
+  --highlight: #ffffff21;
 }
 
 [data-theme="matrix"] {
-  --bg: #030805;
-  --panel: #07150d;
-  --panel-soft: #0f2217;
-  --panel-strong: #060f0a;
-  --panel-glass: #07150dd6;
-  --text: #d6ffe6;
-  --muted: #8bbca0;
-  --accent: #22c55e;
-  --accent-ink: #041209;
-  --stroke: #1f5e37;
-  --glow-a: #22c55e5a;
-  --glow-b: #16a34a52;
-  --bg-mid: #08150f;
-  --bg-end: #040a07;
-  --highlight: #ffffff14;
+  --bg: #020403;
+  --panel: #05110b;
+  --panel-soft: #0b1a13;
+  --panel-strong: #13271d;
+  --panel-glass: #05110be6;
+  --text: #ceffe0;
+  --muted: #78b594;
+  --accent: #2eff80;
+  --accent-ink: #031208;
+  --stroke: #1b5937;
+  --glow-a: #29f77a40;
+  --glow-b: #1ecf5d2b;
+  --bg-mid: #07110b;
+  --bg-end: #030704;
+  --highlight: #ffffff17;
 }
 
 [data-theme="sunset"] {
-  --bg: #1a0e10;
-  --panel: #2a1519;
-  --panel-soft: #3a1d23;
-  --panel-strong: #220f13;
-  --panel-glass: #34191fd0;
-  --text: #ffe9e2;
-  --muted: #f4b9a9;
-  --accent: #fb7185;
-  --accent-ink: #2d0b12;
-  --stroke: #7a3140;
-  --glow-a: #fb718577;
-  --glow-b: #f9731666;
-  --bg-mid: #2d1218;
-  --bg-end: #1d0b10;
+  --bg: #170a0c;
+  --panel: #261114;
+  --panel-soft: #36171b;
+  --panel-strong: #451d24;
+  --panel-glass: #261114ea;
+  --text: #ffe9e5;
+  --muted: #e5b2a8;
+  --accent: #ff7755;
+  --accent-ink: #2f0d06;
+  --stroke: #6a3338;
+  --glow-a: #ff85593d;
+  --glow-b: #ff55352b;
+  --bg-mid: #211013;
+  --bg-end: #120708;
   --highlight: #ffffff1f;
 }
 
 @theme inline {
-  --font-sans: var(--font-sora);
+  --font-sans: var(--font-main);
 }
 
 * {
@@ -121,58 +104,52 @@ body {
   min-height: 100vh;
   color: var(--text);
   background:
-    radial-gradient(circle at 10% 8%, var(--glow-a) 0%, transparent 42%),
-    radial-gradient(circle at 82% 0%, var(--glow-b) 0%, transparent 34%),
-    radial-gradient(circle at 50% 100%, color-mix(in oklab, var(--accent) 16%, transparent) 0%, transparent 45%),
-    linear-gradient(165deg, var(--bg) 0%, var(--bg-mid) 58%, var(--bg-end) 100%);
-  font-family: var(--font-sora), sans-serif;
+    radial-gradient(circle at 4% -10%, var(--glow-a) 0%, transparent 38%),
+    radial-gradient(circle at 92% 0, var(--glow-b) 0%, transparent 35%),
+    linear-gradient(175deg, var(--bg) 0%, var(--bg-mid) 56%, var(--bg-end) 100%);
+  font-family: var(--font-main), sans-serif;
 }
 
 img {
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
 .ui-panel {
   border: 1px solid var(--stroke);
-  border-radius: 1.25rem;
-  background:
-    linear-gradient(160deg, color-mix(in oklab, var(--panel) 84%, transparent), color-mix(in oklab, var(--panel-soft) 86%, transparent)),
-    linear-gradient(130deg, var(--highlight), transparent 46%);
-  box-shadow:
-    inset 0 1px 0 color-mix(in oklab, var(--highlight) 70%, transparent),
-    0 12px 28px rgba(0, 0, 0, 0.22);
-  backdrop-filter: blur(8px);
+  border-radius: 1rem;
+  background: linear-gradient(165deg, color-mix(in oklab, var(--panel) 90%, transparent), var(--panel-soft));
+  box-shadow: inset 0 1px 0 color-mix(in oklab, var(--highlight) 80%, transparent), 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 .ui-soft-panel {
   border: 1px solid var(--stroke);
-  border-radius: 1rem;
+  border-radius: 0.9rem;
   background: var(--panel-glass);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.24);
   backdrop-filter: blur(10px);
 }
 
 .ui-primary-btn {
-  border-radius: 0.85rem;
-  border: 1px solid color-mix(in oklab, var(--accent) 60%, var(--stroke));
-  background: linear-gradient(180deg, color-mix(in oklab, var(--accent) 90%, white 10%), var(--accent));
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--accent) 70%, var(--stroke));
+  background: linear-gradient(180deg, color-mix(in oklab, var(--accent) 92%, white 8%), var(--accent));
   color: var(--accent-ink);
   font-weight: 700;
-  transition: transform 120ms ease, filter 160ms ease;
+  transition: transform 140ms ease, filter 180ms ease;
 }
 
 .ui-primary-btn:hover {
-  filter: brightness(1.08);
-  transform: translateY(-1px);
+  transform: translateY(-1px) scale(1.01);
+  filter: brightness(1.04);
 }
 
 .ui-ghost-btn {
-  border-radius: 0.85rem;
+  border-radius: 999px;
   border: 1px solid var(--stroke);
-  background: color-mix(in oklab, var(--panel-soft) 82%, transparent);
+  background: color-mix(in oklab, var(--panel-soft) 88%, transparent);
   color: var(--text);
   font-weight: 600;
-  transition: transform 120ms ease, filter 160ms ease;
+  transition: transform 140ms ease, filter 180ms ease;
 }
 
 .ui-ghost-btn:hover {

@@ -67,40 +67,50 @@ export function NowPlayingCard({ initialNowPlaying, refreshSeconds }: Props) {
   }, [clientProgressMs, nowPlaying?.durationMs]);
 
   return (
-    <section className="ui-panel p-5">
-      <p className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Now Playing</p>
+    <section className="ui-panel h-full p-5">
+      <div className="flex items-center justify-between">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Now Playing</p>
+        <span className="rounded-full border border-[var(--stroke)] px-2 py-1 text-[10px] font-semibold uppercase text-[var(--muted)]">
+          {nowPlaying?.isPlaying ? "Live" : "Idle"}
+        </span>
+      </div>
+
       {nowPlaying ? (
-        <div className="mt-3 flex items-center gap-3">
-          {nowPlaying.imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={nowPlaying.imageUrl} alt={nowPlaying.albumName} className="h-16 w-16 rounded-2xl object-cover shadow-[0_8px_20px_rgba(0,0,0,0.3)]" />
-          ) : (
-            <div className="h-16 w-16 rounded-xl border border-[var(--stroke)] bg-[var(--panel-soft)]" />
-          )}
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-base font-semibold">{nowPlaying.trackName}</p>
-            <p className="truncate text-sm text-[var(--muted)]">{nowPlaying.artistName}</p>
-            <p className="text-xs text-[var(--muted)]">{nowPlaying.isPlaying ? "Live" : "Last seen"}</p>
+        <div className="mt-4 space-y-4">
+          <div className="flex items-center gap-3">
+            {nowPlaying.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={nowPlaying.imageUrl}
+                alt={nowPlaying.albumName}
+                className="h-20 w-20 rounded-lg object-cover shadow-[0_10px_24px_rgba(0,0,0,0.45)]"
+              />
+            ) : (
+              <div className="h-20 w-20 rounded-lg border border-[var(--stroke)] bg-[var(--panel-strong)]" />
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-lg font-bold">{nowPlaying.trackName}</p>
+              <p className="truncate text-sm text-[var(--muted)]">{nowPlaying.artistName}</p>
+              <p className="mt-1 truncate text-xs text-[var(--muted)]">{nowPlaying.albumName}</p>
+            </div>
+          </div>
+
+          <div>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--panel-strong)]">
+              <div
+                className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-1000"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <div className="mt-2 flex items-center justify-between text-xs text-[var(--muted)]">
+              <span>{formatMs(clientProgressMs)}</span>
+              <span>{formatMs(nowPlaying.durationMs)}</span>
+            </div>
           </div>
         </div>
       ) : (
-        <p className="mt-3 text-sm text-[var(--muted)]">No active track right now.</p>
+        <p className="mt-4 text-sm text-[var(--muted)]">No active track right now.</p>
       )}
-
-      {nowPlaying ? (
-        <div className="mt-4">
-          <div className="h-2.5 w-full overflow-hidden rounded-full bg-[var(--panel-strong)]">
-            <div
-              className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-1000"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <div className="mt-2 flex items-center justify-between text-xs text-[var(--muted)]">
-            <span>{formatMs(clientProgressMs)}</span>
-            <span>{formatMs(nowPlaying.durationMs)}</span>
-          </div>
-        </div>
-      ) : null}
     </section>
   );
 }
