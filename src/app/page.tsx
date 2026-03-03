@@ -81,7 +81,7 @@ export default async function Home({ searchParams }: PageProps) {
         <div className="pointer-events-none absolute -right-24 -top-20 h-56 w-56 rounded-full bg-[var(--glow-a)] blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 right-8 h-44 w-44 rounded-full bg-[var(--glow-b)] blur-3xl" />
 
-        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">Spotify Tracker</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">Spotify Tracker</p>
         <h1 className="mt-3 max-w-3xl text-3xl font-extrabold leading-tight sm:text-5xl">Your listening stats dashboard</h1>
         <p className="mt-3 max-w-2xl text-sm text-[var(--muted)]">
           One place to view total plays, listening time, top items, and collection size across songs, albums, artists, and genres.
@@ -194,10 +194,13 @@ export default async function Home({ searchParams }: PageProps) {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <article className="rounded-xl border border-[var(--stroke)] bg-[var(--panel-soft)] p-4 sm:p-5">
-      <div className="flex items-center justify-between gap-6">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">{label}</p>
-        <p className="text-right text-3xl font-extrabold leading-none">{value}</p>
+    <article className="group relative overflow-hidden rounded-2xl border border-[var(--stroke)] bg-[linear-gradient(135deg,color-mix(in_oklab,var(--panel-soft)_88%,transparent),color-mix(in_oklab,var(--panel)_82%,transparent))] p-4 shadow-[0_10px_24px_rgba(0,0,0,0.25)] sm:p-5">
+      <div className="pointer-events-none absolute -right-8 -top-10 h-24 w-24 rounded-full bg-[var(--glow-a)] blur-2xl transition group-hover:scale-110" />
+      <div className="relative flex items-center justify-between gap-6">
+        <p className="rounded-full border border-[var(--stroke)] bg-[var(--panel-strong)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
+          {label}
+        </p>
+        <p className="text-right text-3xl font-extrabold leading-none sm:text-4xl">{value}</p>
       </div>
     </article>
   );
@@ -205,12 +208,15 @@ function StatCard({ label, value }: { label: string; value: string }) {
 
 function TopStatCard({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
-    <article className="rounded-xl border border-[var(--stroke)] bg-[var(--panel-soft)] p-4 sm:p-5">
-      <div className="flex items-start justify-between gap-6">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">{label}</p>
+    <article className="group relative overflow-hidden rounded-2xl border border-[var(--stroke)] bg-[linear-gradient(135deg,color-mix(in_oklab,var(--panel-soft)_88%,transparent),color-mix(in_oklab,var(--panel)_82%,transparent))] p-4 shadow-[0_10px_24px_rgba(0,0,0,0.25)] sm:p-5">
+      <div className="pointer-events-none absolute -left-8 -top-10 h-24 w-24 rounded-full bg-[var(--glow-b)] blur-2xl transition group-hover:scale-110" />
+      <div className="relative flex items-start justify-between gap-6">
+        <p className="rounded-full border border-[var(--stroke)] bg-[var(--panel-strong)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
+          {label}
+        </p>
         <div className="min-w-0 text-right">
-          <p className="truncate text-lg font-bold">{value}</p>
-          <p className="mt-1 text-xs text-[var(--muted)]">{sub}</p>
+          <p className="truncate text-xl font-bold">{value}</p>
+          <p className="mt-1 text-sm text-[var(--muted)]">{sub}</p>
         </div>
       </div>
     </article>

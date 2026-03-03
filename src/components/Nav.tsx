@@ -53,7 +53,7 @@ export function Nav() {
       >
         <div className="mb-6 rounded-2xl border border-[var(--stroke)] bg-[var(--panel-soft)] p-4">
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">Your Music</p>
-          <p className="mt-2 text-2xl font-bold">Spotify Tracker</p>
+          <p className="mt-2 text-lg font-bold">Spotify Tracker</p>
           <p className="mt-1 text-xs text-[var(--muted)]">Personal listening dashboard</p>
         </div>
 
