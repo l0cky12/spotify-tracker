@@ -38,10 +38,10 @@ type Props = {
 };
 
 type Widget =
-  | { id: string; type: "stat"; statId: string }
-  | { id: string; type: "line" | "bar"; sourceId: string }
-  | { id: string; type: "pie"; sourceId: string }
-  | { id: string; type: "heatmap"; days: number };
+  | { id: string; type: "stat"; statId: string; span: 1 | 2 }
+  | { id: string; type: "line" | "bar"; sourceId: string; span: 1 | 2 }
+  | { id: string; type: "pie"; sourceId: string; span: 1 | 2 }
+  | { id: string; type: "heatmap"; days: number; span: 1 | 2 };
 
 type SeriesSource = {
   id: string;
@@ -125,13 +125,15 @@ export function HomeDashboardBuilder({ stats, timeline, genres, monthly, artistR
     [genres, insights.timeOfDay, insights.weekdayWeekend],
   );
 
+  const [menuOpen, setMenuOpen] = useState(true);
+  const [editMode, setEditMode] = useState(true);
   const [widgets, setWidgets] = useState<Widget[]>([
-    { id: uid("stat"), type: "stat", statId: stats[0]?.id ?? "plays" },
-    { id: uid("stat"), type: "stat", statId: stats[1]?.id ?? stats[0]?.id ?? "plays" },
-    { id: uid("line"), type: "line", sourceId: "daily-hours" },
-    { id: uid("bar"), type: "bar", sourceId: "daily-plays" },
-    { id: uid("pie"), type: "pie", sourceId: "genre-split" },
-    { id: uid("heat"), type: "heatmap", days: 84 },
+    { id: uid("stat"), type: "stat", statId: stats[0]?.id ?? "plays", span: 1 },
+    { id: uid("stat"), type: "stat", statId: stats[1]?.id ?? stats[0]?.id ?? "plays", span: 1 },
+    { id: uid("line"), type: "line", sourceId: "daily-hours", span: 2 },
+    { id: uid("bar"), type: "bar", sourceId: "daily-plays", span: 1 },
+    { id: uid("pie"), type: "pie", sourceId: "genre-split", span: 1 },
+    { id: uid("heat"), type: "heatmap", days: 84, span: 2 },
   ]);
   const [newStatId, setNewStatId] = useState(stats[0]?.id ?? "plays");
   const draggedId = useRef<string | null>(null);
@@ -152,21 +154,23 @@ export function HomeDashboardBuilder({ stats, timeline, genres, monthly, artistR
 
   return (
     <section className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {widgets.map((widget) => (
           <article
             key={widget.id}
-            draggable
+            draggable={editMode}
             onDragStart={() => {
+              if (!editMode) return;
               draggedId.current = widget.id;
             }}
             onDragOver={(event) => event.preventDefault()}
             onDrop={() => {
+              if (!editMode) return;
               if (!draggedId.current) return;
               moveWidget(draggedId.current, widget.id);
               draggedId.current = null;
             }}
-            className="ui-panel cursor-grab p-5"
+            className={`ui-panel p-5 ${editMode ? "cursor-grab" : "cursor-default"} ${widget.span === 2 ? "md:col-span-2" : ""}`}
           >
             <div className="mb-3 flex items-center justify-between gap-3">
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
@@ -181,7 +185,7 @@ export function HomeDashboardBuilder({ stats, timeline, genres, monthly, artistR
               <button
                 type="button"
                 onClick={() => setWidgets((current) => current.filter((item) => item.id !== widget.id))}
-                className="rounded-md border border-[var(--stroke)] px-2 py-1 text-xs text-[var(--muted)] hover:text-[var(--text)]"
+                className={`rounded-md border border-[var(--stroke)] px-2 py-1 text-xs text-[var(--muted)] hover:text-[var(--text)] ${editMode ? "" : "hidden"}`}
               >
                 Remove
               </button>
@@ -255,12 +259,24 @@ export function HomeDashboardBuilder({ stats, timeline, genres, monthly, artistR
         ))}
       </div>
 
-      <aside className="ui-panel h-fit p-5 xl:sticky xl:top-8">
+      <button
+        type="button"
+        onClick={() => setMenuOpen((open) => !open)}
+        className="fixed right-4 top-1/2 z-30 -translate-y-1/2 rounded-l-xl border border-[var(--stroke)] bg-[var(--panel)] px-3 py-2 text-sm"
+      >
+        {menuOpen ? "Close" : "Edit"}
+      </button>
+
+      <aside className={`ui-panel h-fit p-5 xl:sticky xl:top-8 ${menuOpen ? "block" : "hidden"}`}>
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Right Menu</p>
         <h2 className="mt-1 text-xl font-bold">Dashboard Builder</h2>
         <p className="mt-2 text-sm text-[var(--muted)]">
-          Drag and drop is enabled by default. Add/remove stats and customize graphs with different datasets. You can add multiple of the same widget type.
+          Drag and drop is enabled by default. Turn on Edit Mode to change layout, add/remove widgets, and customize graph sources.
         </p>
+        <label className="mt-3 flex items-center gap-2 text-sm text-[var(--muted)]">
+          <input type="checkbox" checked={editMode} onChange={(event) => setEditMode(event.target.checked)} />
+          Edit Mode
+        </label>
 
         <div className="mt-4 space-y-3">
           <div className="rounded-xl border border-[var(--stroke)] bg-[var(--panel-soft)] p-3">
@@ -278,8 +294,9 @@ export function HomeDashboardBuilder({ stats, timeline, genres, monthly, artistR
             </select>
             <button
               type="button"
-              onClick={() => setWidgets((current) => [...current, { id: uid("stat"), type: "stat", statId: newStatId }])}
+              onClick={() => setWidgets((current) => [...current, { id: uid("stat"), type: "stat", statId: newStatId, span: 1 }])}
               className="ui-primary-btn mt-2 w-full px-3 py-2 text-sm"
+              disabled={!editMode}
             >
               Add Stat Widget
             </button>
@@ -290,29 +307,33 @@ export function HomeDashboardBuilder({ stats, timeline, genres, monthly, artistR
             <div className="mt-2 grid grid-cols-1 gap-2">
               <button
                 type="button"
-                onClick={() => setWidgets((current) => [...current, { id: uid("line"), type: "line", sourceId: "daily-hours" }])}
+                onClick={() => setWidgets((current) => [...current, { id: uid("line"), type: "line", sourceId: "daily-hours", span: 2 }])}
                 className="ui-ghost-btn px-3 py-2 text-sm"
+                disabled={!editMode}
               >
                 Add Line Chart
               </button>
               <button
                 type="button"
-                onClick={() => setWidgets((current) => [...current, { id: uid("bar"), type: "bar", sourceId: "daily-plays" }])}
+                onClick={() => setWidgets((current) => [...current, { id: uid("bar"), type: "bar", sourceId: "daily-plays", span: 1 }])}
                 className="ui-ghost-btn px-3 py-2 text-sm"
+                disabled={!editMode}
               >
                 Add Bar Chart
               </button>
               <button
                 type="button"
-                onClick={() => setWidgets((current) => [...current, { id: uid("pie"), type: "pie", sourceId: "genre-split" }])}
+                onClick={() => setWidgets((current) => [...current, { id: uid("pie"), type: "pie", sourceId: "genre-split", span: 1 }])}
                 className="ui-ghost-btn px-3 py-2 text-sm"
+                disabled={!editMode}
               >
                 Add Pie Chart
               </button>
               <button
                 type="button"
-                onClick={() => setWidgets((current) => [...current, { id: uid("heat"), type: "heatmap", days: 84 }])}
+                onClick={() => setWidgets((current) => [...current, { id: uid("heat"), type: "heatmap", days: 84, span: 2 }])}
                 className="ui-ghost-btn px-3 py-2 text-sm"
+                disabled={!editMode}
               >
                 Add Heatmap
               </button>
@@ -325,6 +346,21 @@ export function HomeDashboardBuilder({ stats, timeline, genres, monthly, artistR
               {widgets.map((widget, index) => (
                 <div key={widget.id} className="rounded-lg border border-[var(--stroke)] bg-[var(--panel-strong)] p-2">
                   <p className="text-xs text-[var(--muted)]">#{index + 1} {widget.type.toUpperCase()}</p>
+                  <select
+                    value={widget.span}
+                    onChange={(event) =>
+                      setWidgets((current) =>
+                        current.map((item) =>
+                          item.id === widget.id ? { ...item, span: Number(event.target.value) as 1 | 2 } : item,
+                        ),
+                      )
+                    }
+                    className="mt-1 w-full rounded-md border border-[var(--stroke)] bg-[var(--panel)] px-2 py-1.5 text-xs"
+                    disabled={!editMode}
+                  >
+                    <option value={1}>Half width (side by side)</option>
+                    <option value={2}>Full width</option>
+                  </select>
                   {widget.type === "stat" ? (
                     <select
                       value={widget.statId}
@@ -334,6 +370,7 @@ export function HomeDashboardBuilder({ stats, timeline, genres, monthly, artistR
                         )
                       }
                       className="mt-1 w-full rounded-md border border-[var(--stroke)] bg-[var(--panel)] px-2 py-1.5 text-xs"
+                      disabled={!editMode}
                     >
                       {stats.map((stat) => (
                         <option key={stat.id} value={stat.id}>
@@ -356,6 +393,7 @@ export function HomeDashboardBuilder({ stats, timeline, genres, monthly, artistR
                         )
                       }
                       className="mt-1 w-full rounded-md border border-[var(--stroke)] bg-[var(--panel)] px-2 py-1.5 text-xs"
+                      disabled={!editMode}
                     >
                       {lineBarSources.map((source) => (
                         <option key={source.id} value={source.id}>
@@ -374,6 +412,7 @@ export function HomeDashboardBuilder({ stats, timeline, genres, monthly, artistR
                         )
                       }
                       className="mt-1 w-full rounded-md border border-[var(--stroke)] bg-[var(--panel)] px-2 py-1.5 text-xs"
+                      disabled={!editMode}
                     >
                       {pieSources.map((source) => (
                         <option key={source.id} value={source.id}>
@@ -396,6 +435,7 @@ export function HomeDashboardBuilder({ stats, timeline, genres, monthly, artistR
                         )
                       }
                       className="mt-1 w-full rounded-md border border-[var(--stroke)] bg-[var(--panel)] px-2 py-1.5 text-xs"
+                      disabled={!editMode}
                     >
                       <option value={56}>8 weeks</option>
                       <option value={84}>12 weeks</option>

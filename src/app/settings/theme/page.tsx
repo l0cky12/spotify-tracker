@@ -188,11 +188,12 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
         <form action="/api/settings/import-data" method="post" encType="multipart/form-data" className="mt-4 space-y-3">
           <input type="hidden" name="redirectTo" value="/settings/theme" />
           <label className="block text-sm">
-            <span className="mb-1 block text-[var(--muted)]">JSON file</span>
+            <span className="mb-1 block text-[var(--muted)]">JSON file(s)</span>
             <input
               type="file"
               name="historyFile"
               accept=".json,application/json"
+              multiple
               required
               className="w-full rounded-xl border border-[var(--stroke)] bg-[color:var(--panel-glass)] px-3 py-2 text-sm"
             />

@@ -72,29 +72,41 @@ export async function POST(request: NextRequest) {
   try {
     const appBaseUrl = getAppBaseUrl(request);
     const formData = await request.formData();
-    const file = formData.get("historyFile") ?? formData.get("snapshotFile");
+    const fileCandidates = [
+      ...formData.getAll("historyFile"),
+      ...formData.getAll("snapshotFile"),
+    ];
+    const files: Array<{ text: () => Promise<string> }> = [];
+    for (const candidate of fileCandidates) {
+      if (isFileLike(candidate)) files.push(candidate);
+    }
     const modeRaw = formData.get("mode");
     const redirectToRaw = formData.get("redirectTo");
 
-    if (!isFileLike(file)) {
+    if (!files.length) {
       return NextResponse.redirect(new URL("/settings/theme?import=failed&reason=no-file", appBaseUrl), 303);
     }
 
     const mode = modeRaw === "replace" ? "replace" : "merge";
     const redirectTo = typeof redirectToRaw === "string" && redirectToRaw.startsWith("/") ? redirectToRaw : "/settings/theme";
 
-    const text = await file.text();
-    let parsed: unknown;
-
-    try {
-      parsed = JSON.parse(text);
-    } catch {
-      return NextResponse.redirect(new URL(`${redirectTo}?import=failed&reason=invalid-json`, appBaseUrl), 303);
+    const imported: HistoryEntry[] = [];
+    let invalidCount = 0;
+    for (const file of files) {
+      const text = await file.text();
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        invalidCount += 1;
+        continue;
+      }
+      imported.push(...extractEntries(parsed));
     }
 
-    const imported = extractEntries(parsed);
     if (!imported.length) {
-      return NextResponse.redirect(new URL(`${redirectTo}?import=failed&reason=no-valid-history`, appBaseUrl), 303);
+      const reason = invalidCount ? "invalid-json" : "no-valid-history";
+      return NextResponse.redirect(new URL(`${redirectTo}?import=failed&reason=${reason}`, appBaseUrl), 303);
     }
 
     const enriched = await enrichHistoryGenres(imported);
