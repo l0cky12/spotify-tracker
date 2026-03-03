@@ -33,7 +33,7 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
   const autoSyncMinutes = parseAutoSyncInterval(cookieStore.get(AUTO_SYNC_INTERVAL_COOKIE)?.value);
   const nowPlayingRefreshSeconds = parseNowPlayingRefreshSeconds(cookieStore.get(NOW_PLAYING_REFRESH_COOKIE)?.value);
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8 pt-20 md:px-8 lg:pl-72 lg:pt-8">
+    <main className="w-full px-4 py-8 pt-20 md:px-8 lg:pl-[19rem] lg:pr-8 lg:pt-8">
       <Nav />
       <header className="ui-panel mb-6 p-6">
         <p className="text-xs uppercase tracking-[0.22em] text-[var(--accent)]">Settings</p>

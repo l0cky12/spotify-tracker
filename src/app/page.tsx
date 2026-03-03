@@ -73,7 +73,7 @@ export default async function Home({ searchParams }: PageProps) {
     : 0;
 
   return (
-    <main className="mx-auto max-w-[1300px] px-4 py-8 pt-20 md:px-8 lg:pl-[19rem] lg:pt-8">
+    <main className="w-full px-4 py-8 pt-20 md:px-8 lg:pl-[19rem] lg:pr-8 lg:pt-8">
       <Nav />
       <AutoSync intervalMinutes={autoSyncMinutes} />
 
