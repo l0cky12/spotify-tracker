@@ -94,6 +94,13 @@ export function Nav() {
                 Disconnect
               </button>
             </form>
+            <Link
+              href={`/share${suffix}`}
+              onClick={() => setOpen(false)}
+              className="ui-ghost-btn block w-full px-4 py-2 text-center text-sm"
+            >
+              Share Stats
+            </Link>
           </div>
         </div>
 

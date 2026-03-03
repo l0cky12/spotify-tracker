@@ -33,24 +33,6 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
   const autoSyncMinutes = parseAutoSyncInterval(cookieStore.get(AUTO_SYNC_INTERVAL_COOKIE)?.value);
   const nowPlayingRefreshSeconds = parseNowPlayingRefreshSeconds(cookieStore.get(NOW_PLAYING_REFRESH_COOKIE)?.value);
 
-  const reportPayload = {
-    generatedAt: new Date().toISOString(),
-    settings: {
-      displayUnit,
-      autoSyncMinutes,
-      nowPlayingRefreshSeconds,
-    },
-    conversionReport: {
-      matchedTracks: Number(importCount ?? 0),
-      unmatchedTracks: [],
-      mode: importMode ?? "merge",
-      state: importState ?? "idle",
-      reason: importReason ?? null,
-    },
-  };
-
-  const reportHref = `data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(reportPayload, null, 2))}`;
-
   return (
     <main className="w-full px-4 py-8 pt-20 md:px-8 lg:pl-[19rem] lg:pr-8 lg:pt-8">
       <Nav />
@@ -182,7 +164,9 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
             "Album Color: The dominant color of the album artwork, with modes for perceptual grouping or a pure hue gradient.",
             "Dedicated Playlist Creation - Generate top tracks, new releases, discovery mixes, and more.",
             "Detailed Report: After converting your Local Files, view a report of which tracks were found and which could not be matched.",
-            "Export Report: Download the detailed conversion report as a JSON file for your records.",
+            "Export Report: Download the detailed conversion report as a PDF file for your records.",
+            "Multiple data providers: stats.fm (recommended), Last.fm, or local on-device tracking.",
+            "Customizable dashboard: drag-and-drop layout, section visibility, accent theming.",
           ].map((item) => (
             <article key={item} className="rounded-xl border border-[var(--stroke)] bg-[var(--panel-soft)] p-3 text-sm text-[var(--muted)]">
               {item}
@@ -190,20 +174,15 @@ export default async function ThemeSettingsPage({ searchParams }: PageProps) {
           ))}
         </div>
         <div className="mt-4 flex flex-wrap gap-3">
-          <Link
-            href="https://twitter.com/intent/tweet?text=Check%20out%20my%20Spotify%20Tracker%20stats"
-            target="_blank"
-            rel="noreferrer"
-            className="ui-primary-btn px-4 py-2 text-sm"
-          >
+          <Link href="/share" className="ui-primary-btn px-4 py-2 text-sm">
             Share My Stats
           </Link>
           <button type="button" className="ui-ghost-btn px-4 py-2 text-sm">
             Create Playlist Mixes
           </button>
-          <a href={reportHref} download="spotify-tracker-report.json" className="ui-ghost-btn inline-flex items-center px-4 py-2 text-sm">
-            Export Report (JSON)
-          </a>
+          <Link href="/share?export=pdf" className="ui-ghost-btn inline-flex items-center px-4 py-2 text-sm">
+            Export Report (PDF)
+          </Link>
         </div>
       </section>
 

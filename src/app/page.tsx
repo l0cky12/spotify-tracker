@@ -82,19 +82,19 @@ export default async function Home({ searchParams }: PageProps) {
         <div className="pointer-events-none absolute -bottom-24 right-8 h-44 w-44 rounded-full bg-[var(--glow-b)] blur-3xl" />
 
         <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">Spotify Tracker</p>
-        <h1 className="mt-3 max-w-3xl text-3xl font-extrabold leading-tight sm:text-5xl">Your listening stats dashboard</h1>
-        <p className="mt-3 max-w-2xl text-sm text-[var(--muted)]">
+        <h1 className="mt-2 max-w-3xl text-2xl font-extrabold leading-tight sm:text-3xl">Your listening stats dashboard</h1>
+        <p className="mt-2 max-w-2xl text-xs text-[var(--muted)] sm:text-sm">
           One place to view total plays, listening time, top items, and collection size across songs, albums, artists, and genres.
         </p>
 
-        <div className="mt-6 flex flex-wrap gap-2">
-          <span className="rounded-full border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-1 text-xs text-[var(--muted)]">
+        <div className="mt-4 flex flex-wrap gap-2">
+          <span className="rounded-full border border-[var(--stroke)] bg-[var(--panel-soft)] px-2.5 py-1 text-[11px] text-[var(--muted)]">
             Auto-sync: {autoSyncText}
           </span>
-          <span className="rounded-full border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-1 text-xs text-[var(--muted)]">
+          <span className="rounded-full border border-[var(--stroke)] bg-[var(--panel-soft)] px-2.5 py-1 text-[11px] text-[var(--muted)]">
             Refresh: {nowPlayingRefreshText}
           </span>
-          <span className="rounded-full border border-[var(--stroke)] bg-[var(--panel-soft)] px-3 py-1 text-xs text-[var(--muted)]">
+          <span className="rounded-full border border-[var(--stroke)] bg-[var(--panel-soft)] px-2.5 py-1 text-[11px] text-[var(--muted)]">
             Range: {range.label}
           </span>
         </div>
@@ -143,21 +143,25 @@ export default async function Home({ searchParams }: PageProps) {
             label="Top Song"
             value={songStats[0]?.name ?? "No data"}
             sub={songStats[0] ? formatEstimatedDuration(songStats[0].totalHours, displayUnit) : "Import JSON"}
+            href={songStats[0] ? `/songs/${encodeURIComponent(songStats[0].id)}?${rangeQuery}` : undefined}
           />
           <TopStatCard
             label="Top Album"
             value={albumStats[0]?.name ?? "No data"}
             sub={albumStats[0] ? formatEstimatedDuration(albumStats[0].totalHours, displayUnit) : "Import JSON"}
+            href={albumStats[0] ? `/albums/${encodeURIComponent(albumStats[0].id)}?${rangeQuery}` : undefined}
           />
           <TopStatCard
             label="Top Artist"
             value={artistStats[0]?.name ?? "No data"}
             sub={artistStats[0] ? formatEstimatedDuration(artistStats[0].totalHours, displayUnit) : "Import JSON"}
+            href={artistStats[0] ? `/artists/${encodeURIComponent(artistStats[0].id)}?${rangeQuery}` : undefined}
           />
           <TopStatCard
             label="Top Genre"
             value={genreStats[0]?.name ?? "No data"}
             sub={genreStats[0] ? formatEstimatedDuration(genreStats[0].totalHours, displayUnit) : "Import JSON"}
+            href={genreStats[0] ? `/genres/${encodeURIComponent(genreStats[0].id)}?${rangeQuery}` : undefined}
           />
           <StatCard label={`Albums (${unitLabel})`} value={formatEstimatedDuration(totalAlbumHours, displayUnit, { hoursDecimals: 1 })} />
           <StatCard label={`Artists (${unitLabel})`} value={formatEstimatedDuration(totalArtistHours, displayUnit, { hoursDecimals: 1 })} />
@@ -206,8 +210,18 @@ function StatCard({ label, value }: { label: string; value: string }) {
   );
 }
 
-function TopStatCard({ label, value, sub }: { label: string; value: string; sub: string }) {
-  return (
+function TopStatCard({
+  label,
+  value,
+  sub,
+  href,
+}: {
+  label: string;
+  value: string;
+  sub: string;
+  href?: string;
+}) {
+  const card = (
     <article className="group relative overflow-hidden rounded-2xl border border-[var(--stroke)] bg-[linear-gradient(135deg,color-mix(in_oklab,var(--panel-soft)_88%,transparent),color-mix(in_oklab,var(--panel)_82%,transparent))] p-4 shadow-[0_10px_24px_rgba(0,0,0,0.25)] sm:p-5">
       <div className="pointer-events-none absolute -left-8 -top-10 h-24 w-24 rounded-full bg-[var(--glow-b)] blur-2xl transition group-hover:scale-110" />
       <div className="relative flex items-start justify-between gap-6">
@@ -220,5 +234,12 @@ function TopStatCard({ label, value, sub }: { label: string; value: string; sub:
         </div>
       </div>
     </article>
+  );
+
+  if (!href) return card;
+  return (
+    <Link href={href} className="block transition hover:brightness-110">
+      {card}
+    </Link>
   );
 }
